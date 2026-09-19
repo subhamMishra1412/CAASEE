@@ -2,7 +2,7 @@
 
 **Document:** SRS v1.0  
 **Product:** CAASEE  
-**Document Status:** Draft  
+**Document Status:** Draft — Requirements Review  
 **Version:** 1.0  
 **Date:** 2026-09-19
 
@@ -36,6 +36,7 @@ CAASee combines:
 - Reminders and notifications
 - Contextual schedule assistance
 - Interactive calendar visualization
+- External calendar synchronization
 
 The primary interaction model is:
 
@@ -78,13 +79,14 @@ CAASee V1 SHALL allow a user to:
 6. Check schedule availability.
 7. Detect scheduling conflicts.
 8. Suggest alternative available times.
-9. Require appropriate user authorization before calendar changes.
-10. Create and manage reminders.
+9. Require explicit confirmation before calendar-changing actions.
+10. Create and manage lightweight tasks and reminders.
 11. Receive push notifications.
 12. Open CAASee from a notification with relevant context.
 13. Ask questions about their schedule.
 14. Receive a daily schedule briefing.
 15. View their schedule through an interactive calendar.
+16. Connect and synchronize a Google Calendar account.
 
 ---
 
@@ -107,22 +109,27 @@ but SHALL NOT silently change the user's schedule.
 - Authentication
 - Login/logout
 - User profile
-- Time zone
+- User time zone
 - Notification permissions
 - Calendar permissions
+- Google Calendar connection management
 
-### Calendar
+### CAASee Calendar
 
 - Day view
 - Week view
 - Month view
 - Event details
 - All-day events
+- Recurring events
 - Event creation
 - Event modification
 - Event deletion
 - Event location
 - Event description
+- Event participants as metadata
+- Calendar availability
+- Calendar synchronization state
 
 ### AI Assistant
 
@@ -134,6 +141,7 @@ but SHALL NOT silently change the user's schedule.
 - Structured scheduling actions
 - Conversational responses
 - Voice output/TTS
+- Notification-context awareness
 
 ### Scheduling
 
@@ -143,18 +151,36 @@ but SHALL NOT silently change the user's schedule.
 - Event scheduling
 - Event rescheduling
 - Event cancellation/deletion
-- User confirmation
+- Explicit user confirmation
 - Schedule reasoning
+- Working-hours awareness
+
+### Tasks
+
+- Lightweight task creation
+- Task modification
+- Task completion
+- Optional task due date/time
+- Task reminders
 
 ### Reminders and Notifications
 
 - Event reminders
-- Task/reminder support
+- Task reminders
 - Push notifications
 - Notification updates after schedule changes
 - Notification cancellation when applicable
 - Contextual AI entry from notifications
 - Daily schedule briefing
+
+### External Calendar Synchronization
+
+- Google Calendar account connection
+- Google Calendar event import
+- CAASee event synchronization with Google Calendar
+- Synchronization status
+- Synchronization error handling
+- Conflict handling between CAASee and Google Calendar data
 
 ---
 
@@ -174,7 +200,12 @@ The following are not required for V1:
 - Full phone/device control
 - Autonomous calendar rearrangement
 - Background automatic voice interaction
-- Large-scale multi-provider calendar support
+- Apple Calendar synchronization
+- Microsoft/Outlook Calendar synchronization
+- External calendar invitations/RSVP management
+- Advanced project-management functionality
+- Complex task dependencies
+- Team/shared task management
 
 These may be considered for future versions.
 
@@ -184,7 +215,7 @@ These may be considered for future versions.
 
 ## 4.1 User
 
-The primary actor who owns and controls the calendar.
+The primary actor who owns and controls the CAASee calendar.
 
 The user can:
 
@@ -195,6 +226,8 @@ The user can:
 - view schedule
 - modify events
 - manage reminders
+- connect external calendar accounts
+- control synchronization
 
 ---
 
@@ -222,6 +255,7 @@ Responsible for:
 - scheduling rules
 - alternative time generation
 - validation of scheduling actions
+- working-hours evaluation
 
 ---
 
@@ -229,12 +263,13 @@ Responsible for:
 
 Responsible for:
 
-- storing calendar state
+- storing CAASee calendar state
 - creating events
 - updating events
 - deleting events
 - retrieving events
-- synchronizing calendar state
+- managing recurring events
+- maintaining calendar synchronization state
 
 ---
 
@@ -249,13 +284,29 @@ Responsible for:
 
 ---
 
+## 4.6 Google Calendar Integration
+
+Responsible for:
+
+- OAuth authorization
+- retrieving Google Calendar events
+- creating/updating/deleting synchronized events where authorized
+- tracking external event identifiers
+- detecting synchronization changes
+- reporting synchronization failures
+
+Google Calendar SHALL be treated as an external integration and SHALL NOT
+replace the CAASee domain model.
+
+---
+
 # 5. Functional Requirements
 
 # 5.1 User and Account Requirements
 
 ### FR-001 — User Registration
 
-The system SHALL allow a user to create an account.
+The system SHALL allow a user to create a CAASee account.
 
 ### FR-002 — Authentication
 
@@ -276,9 +327,19 @@ The system SHALL store the user's configured time zone.
 The system SHALL allow the user to view and manage basic profile
 information.
 
+### FR-006 — Google Calendar Connection
+
+The system SHALL allow the user to connect a Google Calendar account
+through an authorized authentication flow.
+
+### FR-007 — Google Calendar Disconnection
+
+The system SHALL allow the user to disconnect a previously connected
+Google Calendar account.
+
 ---
 
-# 5.2 Calendar Requirements
+# 5.2 CAASee Calendar Requirements
 
 ### FR-010 — Calendar Views
 
@@ -286,12 +347,22 @@ The system SHALL provide day, week, and month calendar views.
 
 ### FR-011 — Event Retrieval
 
-The system SHALL retrieve calendar events for a requested date range.
+The system SHALL retrieve CAASee calendar events for a requested date
+range.
 
 ### FR-012 — Event Details
 
-The system SHALL support event title, start time, end time, time zone,
-description, location, and source information.
+The system SHALL support:
+
+- title
+- start time
+- end time
+- time zone
+- description
+- location
+- participants
+- source
+- synchronization status
 
 ### FR-013 — All-Day Events
 
@@ -311,54 +382,74 @@ The system SHALL allow authorized deletion of existing events.
 
 ### FR-017 — Event Time Zone
 
-Events SHALL retain their applicable time zone.
+Events SHALL retain applicable time-zone information.
 
 ### FR-018 — Recurring Events
 
-The system SHALL support recurring events if enabled as part of the V1
-calendar model.
+The system SHALL support recurring events.
 
-Recurring-event behavior SHALL be explicitly defined before implementation.
+V1 SHALL support at minimum:
+
+- daily recurrence
+- weekly recurrence
+- monthly recurrence
+- recurrence end date or occurrence limit
+
+### FR-019 — Recurring Event Modification
+
+The system SHALL distinguish between modifying:
+
+- a single occurrence
+- the entire recurring series
+
+The exact user interaction SHALL be defined during use-case design.
+
+### FR-020 — Recurring Event Deletion
+
+The system SHALL support deletion of:
+
+- a single occurrence
+- an entire recurring series
 
 ---
 
 # 5.3 Natural Language and AI Requirements
 
-### FR-020 — Natural Language Input
+### FR-030 — Natural Language Input
 
 The system SHALL accept scheduling requests expressed in natural language.
 
-### FR-021 — Voice Input
+### FR-031 — Voice Input
 
 The system SHALL support voice input for scheduling and schedule-related
 requests.
 
-### FR-022 — Text Input
+### FR-032 — Text Input
 
 The system SHALL support text input for scheduling and schedule-related
 requests.
 
-### FR-023 — Intent Extraction
+### FR-033 — Intent Extraction
 
 The AI layer SHALL convert supported natural-language requests into
 structured scheduling intents.
 
-### FR-024 — Missing Information
+### FR-034 — Missing Information
 
 If required scheduling information is missing, the system SHALL ask the
 user for clarification.
 
-### FR-025 — Ambiguity
+### FR-035 — Ambiguity
 
 If a date, time, event, or requested action is ambiguous, the system SHALL
 ask for clarification rather than making an unsafe assumption.
 
-### FR-026 — Structured Actions
+### FR-036 — Structured Actions
 
 The AI layer SHALL produce structured actions that can be validated by
 the application before execution.
 
-### FR-027 — AI Authority Boundary
+### FR-037 — AI Authority Boundary
 
 The AI layer SHALL NOT directly modify persistent calendar state.
 
@@ -366,7 +457,7 @@ The AI layer SHALL NOT directly modify persistent calendar state.
 
 # 5.4 Event Creation Requirements
 
-### FR-030 — Create Event Request
+### FR-040 — Create Event Request
 
 The user SHALL be able to request creation of an event using natural
 language.
@@ -375,7 +466,7 @@ Example:
 
 > "Schedule a meeting with Rahul tomorrow at 8 PM."
 
-### FR-031 — Event Interpretation
+### FR-041 — Event Interpretation
 
 The system SHALL identify applicable event information such as:
 
@@ -383,52 +474,66 @@ The system SHALL identify applicable event information such as:
 - date
 - start time
 - duration/end time
+- time zone
 - location
 - description
-- participants, where supported
+- participants, where provided
 
-### FR-032 — Availability Check
+### FR-042 — Availability Check
 
-The system SHALL check the user's calendar before creating the event.
+The system SHALL check the applicable CAASee calendar state before
+creating the event.
 
-### FR-033 — Confirmation
+### FR-043 — Confirmation
 
-The system SHALL obtain appropriate user authorization before creating a
-calendar-changing event.
+The system SHALL obtain explicit user confirmation immediately before
+creating a calendar-changing event.
 
-### FR-034 — Successful Creation
+### FR-044 — Successful Creation
 
-After authorization, the system SHALL create the event and update the
-calendar state.
+After confirmation, the system SHALL create the event and update the
+CAASee calendar state.
+
+### FR-045 — Participant Metadata
+
+V1 SHALL allow participant information to be stored as event metadata.
+
+CAASee V1 SHALL NOT send external calendar invitations or manage RSVP
+states.
 
 ---
 
 # 5.5 Conflict Requirements
 
-### FR-040 — Conflict Detection
+### FR-050 — Conflict Detection
 
 The system SHALL detect conflicts between a requested time period and
 existing calendar events.
 
-### FR-041 — Conflict Disclosure
+### FR-051 — Conflict Disclosure
 
-The system SHALL identify the relevant conflicting event to the user.
+The system SHALL identify relevant conflicting events to the user.
 
-### FR-042 — No Silent Resolution
+### FR-052 — No Silent Resolution
 
 The system SHALL NOT automatically move, delete, or modify an existing
 event to resolve a conflict.
 
-### FR-043 — Alternative Suggestions
+### FR-053 — Alternative Suggestions
 
-When suitable alternatives are available, the system SHALL be able to
-suggest alternative times.
+When suitable alternatives are available, the system SHALL suggest
+alternative times.
 
-### FR-044 — User Selection
+### FR-054 — User Selection
 
 The user SHALL be able to select an alternative proposed by the system.
 
-### FR-045 — No Alternative
+### FR-055 — Alternative Confirmation
+
+Selecting an alternative SHALL require explicit confirmation before the
+resulting calendar change is executed.
+
+### FR-056 — No Alternative
 
 If no suitable alternative is available, the system SHALL inform the user
 rather than creating an unauthorized conflicting schedule.
@@ -437,26 +542,31 @@ rather than creating an unauthorized conflicting schedule.
 
 # 5.6 Event Modification Requirements
 
-### FR-050 — Rescheduling
+### FR-060 — Rescheduling
 
 The user SHALL be able to request that an existing event be moved.
 
-### FR-051 — Modification Confirmation
+### FR-061 — Modification Confirmation
 
-The system SHALL obtain appropriate user authorization before changing
-persistent calendar state.
+The system SHALL obtain explicit user confirmation immediately before
+changing persistent calendar state.
 
-### FR-052 — Related Notification Update
+### FR-062 — Related Notification Update
 
 When an event is successfully rescheduled, associated reminders SHALL be
 updated to reflect the new event schedule.
 
-### FR-053 — Cancellation
+### FR-063 — Cancellation
 
 The user SHALL be able to cancel/delete an existing event through the
 assistant.
 
-### FR-054 — No Unauthorized Modification
+### FR-064 — Deletion Confirmation
+
+The system SHALL obtain explicit confirmation immediately before deleting
+an existing event.
+
+### FR-065 — No Unauthorized Modification
 
 The system SHALL NOT modify unrelated events while executing a requested
 calendar operation.
@@ -465,7 +575,7 @@ calendar operation.
 
 # 5.7 Availability Requirements
 
-### FR-060 — Availability Query
+### FR-070 — Availability Query
 
 The user SHALL be able to ask CAASee to find available time.
 
@@ -473,76 +583,90 @@ Example:
 
 > "When am I free for an hour tomorrow?"
 
-### FR-061 — Availability Analysis
+### FR-071 — Availability Analysis
 
-The system SHALL consider existing calendar events when determining
-availability.
+The system SHALL consider applicable CAASee calendar events when
+determining availability.
 
-### FR-062 — Duration
+### FR-072 — Duration
 
 Availability calculations SHALL account for the requested duration.
 
-### FR-063 — Time Zone
+### FR-073 — Time Zone
 
-Availability calculations SHALL use the applicable calendar/user time
+Availability calculations SHALL use the applicable user/calendar time
 zone.
 
-### FR-064 — Multiple Options
+### FR-074 — Working Hours
+
+The scheduling engine SHALL support configurable user working hours.
+
+### FR-075 — Multiple Options
 
 The system SHOULD provide multiple suitable options when multiple valid
 slots exist.
+
+### FR-076 — Buffer Time
+
+Buffer time SHALL NOT be required for the initial V1 scheduling algorithm.
+
+It MAY be introduced as a future scheduling feature.
 
 ---
 
 # 5.8 Reminder Requirements
 
-### FR-070 — Reminder Creation
+### FR-080 — Reminder Creation
 
 The user SHALL be able to create reminders using natural language.
 
-### FR-071 — Event Reminders
+### FR-081 — Event Reminders
 
 The system SHALL support reminders associated with calendar events.
 
-### FR-072 — Reminder Timing
+### FR-082 — Task Reminders
+
+The system SHALL support reminders associated with tasks.
+
+### FR-083 — Reminder Timing
 
 The system SHALL support a defined reminder time relative to the
-associated event.
+associated event or task.
 
-### FR-073 — Reminder Synchronization
+### FR-084 — Reminder Synchronization
 
-When an associated event changes, its applicable reminders SHALL be
-updated accordingly.
+When an associated event changes, applicable reminders SHALL be updated
+accordingly.
 
-### FR-074 — Obsolete Reminder
+### FR-085 — Obsolete Reminder
 
-When an associated event is deleted, its applicable reminders SHALL be
-cancelled.
+When an associated event or task is deleted, its applicable reminders
+SHALL be cancelled.
 
 ---
 
 # 5.9 Notification Requirements
 
-### FR-080 — Push Notifications
+### FR-090 — Push Notifications
 
 The system SHALL support push notifications for supported reminders.
 
-### FR-081 — Notification Content
+### FR-091 — Notification Content
 
 A notification SHALL contain sufficient information to identify the
 relevant scheduling context.
 
-### FR-082 — Notification Context
+### FR-092 — Notification Context
 
 A notification SHALL contain an internal reference to the relevant event,
 task, or notification context where applicable.
 
-### FR-083 — Contextual Application Launch
+### FR-093 — Contextual Application Launch
 
 When the user opens CAASee from a supported notification, the application
 SHALL provide the relevant context to the AI assistant.
 
-### FR-084 — Contextual Response
+### FR-094 — Contextual Response
 
 The AI assistant SHALL be able to respond using the notification context
 without requiring the user to repeat the reason for opening the
@@ -552,16 +676,16 @@ application.
 
 # 5.10 Schedule Understanding Requirements
 
-### FR-090 — Today's Schedule
+### FR-100 — Today's Schedule
 
 The user SHALL be able to ask CAASee about their schedule for the current
 day.
 
-### FR-091 — Future Schedule
+### FR-101 — Future Schedule
 
 The user SHALL be able to ask about future schedule periods.
 
-### FR-092 — Schedule Questions
+### FR-102 — Schedule Questions
 
 The system SHALL support natural-language questions about calendar state.
 
@@ -576,38 +700,127 @@ Examples:
 
 # 5.11 Daily Briefing Requirements
 
-### FR-100 — Daily Briefing
+### FR-110 — Daily Briefing
 
 The system SHALL provide a daily schedule briefing.
 
-### FR-101 — Briefing Information
+### FR-111 — Briefing Information
 
-The briefing SHOULD include relevant scheduled events and important
-schedule information for the day.
+The briefing SHALL summarize relevant events for the current day in
+chronological order.
 
-### FR-102 — Briefing Interaction
+The briefing SHOULD also identify known conflicts or important scheduling
+conditions.
+
+### FR-112 — Briefing Interaction
 
 The user SHALL be able to ask follow-up questions about the briefing.
+
+### FR-113 — Automatic Voice Restriction
+
+V1 SHALL NOT require the operating system to automatically initiate
+background voice playback.
+
+The user SHALL explicitly open/interact with the application before
+contextual voice interaction begins.
 
 ---
 
 # 5.12 Task Requirements
 
-### FR-110 — Task Support
+### FR-120 — Task Creation
 
-CAASee V1 MAY support lightweight tasks separate from calendar events.
+The user SHALL be able to create a lightweight task.
 
-### FR-111 — Task Reminder
+### FR-121 — Task Attributes
 
-A task MAY have an associated reminder.
+A task SHALL support at minimum:
 
-### FR-112 — Task Distinction
+- title
+- completion status
+- optional due date/time
+- optional reminder
 
-Tasks and calendar events SHALL be represented as distinct domain
-concepts if both are supported.
+### FR-122 — Task Modification
 
-Task functionality SHALL remain limited in V1 and SHALL NOT become a
-full project-management system.
+The user SHALL be able to modify a task.
+
+### FR-123 — Task Completion
+
+The user SHALL be able to mark a task as completed.
+
+### FR-124 — Task Deletion
+
+The user SHALL be able to delete a task.
+
+### FR-125 — Task Scope
+
+V1 task functionality SHALL remain limited to lightweight personal task
+management.
+
+CAASee SHALL NOT implement project-management functionality in V1.
+
+---
+
+# 5.13 Google Calendar Synchronization Requirements
+
+### FR-130 — Google Calendar Authorization
+
+The system SHALL use an authorized Google authentication flow to obtain
+the permissions required for supported synchronization operations.
+
+### FR-131 — Google Event Import
+
+The system SHALL be able to import supported Google Calendar events into
+the CAASee calendar model.
+
+### FR-132 — External Event Identity
+
+Synchronized events SHALL retain the external Google Calendar event
+identifier required for synchronization.
+
+### FR-133 — Source Tracking
+
+The system SHALL identify whether an event originated from:
+
+- CAASee
+- Google Calendar
+- a synchronized state involving both
+
+### FR-134 — Synchronization State
+
+The system SHALL maintain synchronization status for synchronized events.
+
+### FR-135 — Google-to-CAASee Changes
+
+Changes made to synchronized Google Calendar events SHALL be reflected in
+CAASee after synchronization.
+
+### FR-136 — CAASee-to-Google Changes
+
+Where the user has granted the required permissions, authorized changes
+to synchronized CAASee events SHALL be propagated to Google Calendar.
+
+### FR-137 — Synchronization Failure
+
+If synchronization fails, the system SHALL clearly indicate that the
+external calendar may not reflect the latest CAASee state.
+
+### FR-138 — Synchronization Conflicts
+
+If conflicting changes occur between CAASee and Google Calendar, the
+system SHALL detect the conflict and SHALL NOT silently overwrite
+user-created calendar data.
+
+The conflict-resolution strategy SHALL be defined during architecture and
+integration design.
+
+### FR-139 — Disconnect Behavior
+
+Disconnecting Google Calendar SHALL stop future synchronization.
+
+The system SHALL NOT automatically delete the user's CAASee calendar
+data when Google Calendar is disconnected.
 
 ---
 
@@ -621,32 +834,44 @@ The user remains the final authority over calendar changes.
 
 CAASee SHALL NOT silently modify existing calendar events.
 
-### BR-003 — Conflict Transparency
+### BR-003 — Explicit Confirmation
+
+Every V1 operation that creates, modifies, moves, or deletes persistent
+calendar state SHALL require explicit user confirmation immediately before
+execution.
+
+### BR-004 — Conflict Transparency
 
 Scheduling conflicts SHALL be communicated to the user.
 
-### BR-004 — Explicit Authorization
+### BR-005 — No Automatic Conflict Resolution
 
-Persistent calendar changes SHALL require appropriate user authorization.
+CAASee SHALL NOT resolve calendar conflicts by independently moving,
+deleting, or modifying existing events.
 
-### BR-005 — Backend Authority
+### BR-006 — Backend Authority
 
-The application/backend scheduling system SHALL be the authoritative source
-for calendar state.
+The CAASee application/backend calendar system SHALL be the authoritative
+source for CAASee's internal calendar state.
 
-### BR-006 — AI Is Not the Source of Truth
+### BR-007 — AI Is Not the Source of Truth
 
 The LLM SHALL NOT be treated as the source of truth for events,
-availability, reminders, or permissions.
+availability, reminders, permissions, or synchronization state.
 
-### BR-007 — Validation Before Execution
+### BR-008 — Validation Before Execution
 
 AI-generated actions SHALL be validated before execution.
 
-### BR-008 — Synchronization
+### BR-009 — Synchronization
 
 Calendar state, reminders, notifications, and relevant UI state SHALL
-remain synchronized after successful changes.
+remain synchronized after successful CAASee operations.
+
+### BR-010 — External Calendar Boundary
+
+Google Calendar is an external synchronization system and SHALL NOT replace
+CAASee's internal calendar domain model.
 
 ---
 
@@ -657,13 +882,14 @@ The scheduling engine SHALL define and enforce:
 - event overlap rules
 - event duration
 - availability
-- working hours
+- configurable working hours
 - time zones
 - daylight-saving transitions where applicable
 - all-day event behavior
 - recurring event behavior
 - scheduling boundaries
-- buffer requirements, if enabled
+
+Buffer time is not required for the initial V1 scheduling algorithm.
 
 These rules SHALL be finalized before implementation of the scheduling
 engine.
@@ -672,11 +898,12 @@ engine.
 
 # 8. Data Requirements
 
-The V1 domain model is expected to contain concepts including:
+The V1 domain model SHALL contain concepts including:
 
 - User
 - Calendar
 - CalendarEvent
+- RecurrenceRule
 - Task
 - Reminder
 - Notification
@@ -685,46 +912,79 @@ The V1 domain model is expected to contain concepts including:
 - Conflict
 - AvailabilitySlot
 - Conversation
+- CalendarIntegration
+- ExternalEventReference
+- AuditRecord
 
 The exact database schema SHALL be defined in a later design task.
 
 ### DR-001 — Event Identity
 
-Every calendar event SHALL have a unique identifier.
+Every CAASee calendar event SHALL have a unique identifier.
 
-### DR-002 — Temporal Data
+### DR-002 — External Event Identity
 
-Event start/end timestamps SHALL be stored in a format that preserves
-time-zone information.
+A synchronized event SHALL retain the external provider identifier
+required to synchronize it.
 
-### DR-003 — Auditability
+### DR-003 — Temporal Data
 
-Calendar-changing operations SHOULD be traceable to the user action that
-initiated them.
+Event start/end timestamps SHALL be stored in a representation that
+preserves applicable time-zone information.
 
 ### DR-004 — Data Ownership
 
 Calendar data SHALL be associated with the authenticated user who owns or
 controls it.
 
+### DR-005 — Source Tracking
+
+The system SHALL retain sufficient information to determine the source
+and synchronization state of calendar events.
+
+### DR-006 — Auditability
+
+Calendar-changing operations SHALL be traceable to the user action that
+initiated them.
+
+### DR-007 — Audit Record
+
+An audit record SHOULD contain, where applicable:
+
+- operation type
+- affected entity
+- initiating user
+- source/channel
+- timestamp
+- operation result
+
+### DR-008 — Synchronization Metadata
+
+Synchronized calendar data SHALL retain sufficient metadata to detect and
+process external changes.
+
 ---
 
 # 9. External Integrations
 
-Potential external integrations include:
+V1 may integrate with:
 
 - Authentication provider
 - AI/LLM provider
 - Speech-to-text provider
 - Text-to-speech provider
-- Calendar provider
+- Google Calendar
 - Push notification service
 
 The exact providers and integration contracts SHALL be selected during
 architecture and API design.
 
-CAASee's core scheduling logic SHALL remain independent of a specific
-external provider wherever practical.
+CAASee's core scheduling logic SHALL remain independent of external
+providers wherever practical.
+
+Google Calendar SHALL be implemented behind a calendar integration/adapter
+boundary so future providers can be added without replacing the CAASee
+calendar domain.
 
 ---
 
@@ -741,8 +1001,9 @@ access.
 
 ### SEC-003 — Credential Protection
 
-Authentication credentials, API keys, and external service tokens SHALL
-not be exposed through client-side source code or insecure storage.
+Authentication credentials, API keys, OAuth tokens, and external service
+credentials SHALL NOT be exposed through client-side source code or
+insecure storage.
 
 ### SEC-004 — Calendar Privacy
 
@@ -755,8 +1016,18 @@ AI processing layer.
 
 ### SEC-006 — Sensitive Logging
 
-Logs SHALL NOT unnecessarily contain sensitive calendar or authentication
-information.
+Logs SHALL NOT unnecessarily contain sensitive calendar, authentication,
+or OAuth information.
+
+### SEC-007 — Google Authorization
+
+Google Calendar access SHALL use the supported authorization mechanism
+and SHALL NOT require users to provide Google account passwords to CAASee.
+
+### SEC-008 — Token Revocation
+
+The system SHALL handle revoked or expired Google authorization and SHALL
+require reauthorization when necessary.
 
 ---
 
@@ -803,6 +1074,17 @@ potentially conflicting operation.
 The application SHALL provide an appropriate error state when a required
 network operation cannot be completed.
 
+### ERR-009 — Google Synchronization Failure
+
+If Google Calendar synchronization fails, CAASee SHALL preserve the
+known CAASee calendar state and clearly indicate that synchronization is
+incomplete.
+
+### ERR-010 — Authorization Expiration
+
+If Google authorization expires or is revoked, synchronization SHALL stop
+until the user reauthorizes the integration.
+
 ---
 
 # 12. Non-Functional Requirements
@@ -812,11 +1094,17 @@ network operation cannot be completed.
 ### NFR-001
 
 The system SHALL NOT report a calendar-changing operation as successful
-unless the operation has been successfully persisted/synchronized.
+unless the operation has been successfully persisted.
 
 ### NFR-002
 
-Calendar state SHALL remain consistent after successful operations.
+CAASee calendar state SHALL remain internally consistent after successful
+operations.
+
+### NFR-003
+
+Synchronization failures SHALL NOT silently destroy or overwrite known
+CAASee calendar data.
 
 ---
 
@@ -824,16 +1112,21 @@ Calendar state SHALL remain consistent after successful operations.
 
 ### NFR-010
 
-Normal calendar retrieval operations SHOULD respond within an acceptable
-interactive application latency target.
+Normal calendar retrieval operations SHALL provide an interactive user
+experience.
+
+Exact latency targets SHALL be defined during architecture and
+infrastructure design.
 
 ### NFR-011
 
-AI interactions SHOULD provide visible progress/processing feedback while
+AI interactions SHALL provide visible or audible processing feedback while
 the system is processing a request.
 
-Exact performance targets SHALL be finalized after architecture and
-infrastructure selection.
+### NFR-012
+
+Synchronization operations SHALL provide appropriate progress or status
+feedback when they are not completed immediately.
 
 ---
 
@@ -851,9 +1144,14 @@ The application SHALL clearly distinguish:
 - information
 - recommendation
 - pending action
-- confirmed action
+- confirmation request
 - completed action
 - failed action
+
+### NFR-022
+
+The application SHALL clearly communicate when an event is synchronized
+with Google Calendar.
 
 ---
 
@@ -879,11 +1177,16 @@ presentation layer.
 
 ### NFR-031
 
-Calendar state SHALL have a clearly defined authoritative source.
+CAASee calendar state SHALL have a clearly defined authoritative source.
 
 ### NFR-032
 
 Core scheduling behavior SHALL be testable independently of the UI.
+
+### NFR-033
+
+External calendar providers SHALL be isolated behind integration/adapter
+boundaries.
 
 ---
 
@@ -895,8 +1198,8 @@ The AI SHALL NOT invent calendar events.
 
 ### AIR-002
 
-The AI SHALL NOT claim an event was created unless the underlying operation
-succeeded.
+The AI SHALL NOT claim an event was created unless the underlying
+operation succeeded.
 
 ### AIR-003
 
@@ -905,7 +1208,8 @@ operation succeeded.
 
 ### AIR-004
 
-The AI SHALL ask for clarification when required information is ambiguous.
+The AI SHALL ask for clarification when required information is
+ambiguous.
 
 ### AIR-005
 
@@ -919,6 +1223,16 @@ The AI SHALL NOT directly mutate persistent application state.
 
 The system SHALL validate AI-generated actions before execution.
 
+### AIR-008
+
+The AI SHALL NOT claim that Google Calendar was synchronized unless the
+underlying synchronization operation succeeded.
+
+### AIR-009
+
+The AI SHALL distinguish between CAASee calendar state and external
+calendar synchronization state.
+
 ---
 
 # 14. V1 vs Future Roadmap
@@ -927,23 +1241,29 @@ The system SHALL validate AI-generated actions before execution.
 
 - Conversational scheduling
 - Voice/text interaction
-- Personal calendar
+- CAASee-owned personal calendar
 - Event management
+- Recurring events
 - Conflict detection
 - Availability analysis
+- Configurable working hours
 - Alternative suggestions
-- Confirmation
+- Explicit confirmation
+- Lightweight tasks
 - Reminders
 - Push notifications
 - Contextual AI
 - Daily briefing
-- Basic tasks
+- Google Calendar synchronization
 
 ## Future
 
 Potential future capabilities include:
 
-- Multiple calendar providers
+- Apple Calendar synchronization
+- Microsoft/Outlook Calendar synchronization
+- External calendar invitations
+- RSVP management
 - Email integration
 - WhatsApp integration
 - Meeting participation
@@ -952,8 +1272,10 @@ Potential future capabilities include:
 - Team scheduling
 - Shared calendars
 - Advanced scheduling optimization
+- Buffer-aware scheduling
 - Deeper productivity analytics
 - Advanced device integrations
+- Advanced project/task management
 
 These features SHALL NOT be treated as V1 requirements unless explicitly
 added to the scope.
@@ -967,16 +1289,22 @@ Task 003 SHALL be considered complete when:
 - All V1 capabilities have defined requirements.
 - Requirements have unique identifiers.
 - Mandatory requirements are testable.
-- User authorization behavior is defined.
+- User authorization behavior is explicitly defined.
 - Conflict behavior is defined.
+- Recurring-event behavior is defined.
+- Participant behavior is defined.
+- CAASee calendar ownership is defined.
+- Google Calendar synchronization boundaries are defined.
 - AI authority boundaries are defined.
 - Calendar state ownership is defined.
 - Notification behavior is defined.
 - Error behavior is defined.
 - Security/privacy requirements are documented.
 - V1 scope is separated from future scope.
-- Major ambiguities have been resolved or explicitly marked for resolution.
-- Requirements are suitable for deriving use cases and system architecture.
+- Major ambiguities have been resolved or explicitly assigned to a later
+  design task.
+- Requirements are suitable for deriving use cases and system
+  architecture.
 
 ---
 
@@ -993,37 +1321,39 @@ Requirement
 
 Example:
 
-| Requirement | Use Case                      | Component          | Test   |
-| ----------- | ----------------------------- | ------------------ | ------ |
-| FR-030      | UC-01 Create Event            | Scheduling Service | TC-030 |
-| FR-040      | UC-03 Detect Conflict         | Conflict Engine    | TC-040 |
-| FR-043      | UC-04 Suggest Alternative     | Scheduling Engine  | TC-043 |
-| FR-070      | UC-09 Create Reminder         | Reminder Service   | TC-070 |
-| FR-083      | UC-11 Contextual Notification | Notification + AI  | TC-083 |
+| Requirement | Use Case                      | Component            | Test   |
+| ----------- | ----------------------------- | -------------------- | ------ |
+| FR-040      | UC-01 Create Event            | Scheduling Service   | TC-040 |
+| FR-050      | UC-03 Detect Conflict         | Conflict Engine      | TC-050 |
+| FR-053      | UC-04 Suggest Alternative     | Scheduling Engine    | TC-053 |
+| FR-080      | UC-09 Create Reminder         | Reminder Service     | TC-080 |
+| FR-093      | UC-11 Contextual Notification | Notification + AI    | TC-093 |
+| FR-130      | UC-14 Connect Google Calendar | Calendar Integration | TC-130 |
+| FR-135      | UC-15 Synchronize Calendar    | Sync Service         | TC-135 |
 
 ---
 
 # 17. Open Decisions
 
-The following decisions SHALL be finalized before the affected
-implementation begins:
+The following items remain to be finalized during subsequent SDLC tasks:
 
-1. Primary external calendar provider for V1.
-2. Exact confirmation policy for explicit user commands.
-3. Recurring event support and behavior.
-4. Participant/invitation functionality.
-5. Working-hours configuration.
-6. Buffer-time rules.
-7. Default reminder behavior.
-8. Exact task scope.
-9. AI/LLM provider.
-10. Speech-to-text provider.
-11. Text-to-speech provider.
-12. Data retention policy.
-13. Offline behavior.
-14. Exact performance targets.
+1. Exact Google Calendar synchronization mechanism and synchronization
+   frequency.
+2. Google Calendar OAuth scopes required for V1.
+3. Exact synchronization conflict-resolution strategy.
+4. Exact user interaction for modifying/deleting recurring events.
+5. Exact working-hours configuration UX.
+6. Default reminder values.
+7. AI/LLM provider.
+8. Speech-to-text provider.
+9. Text-to-speech provider.
+10. Data retention policy.
+11. Offline behavior.
+12. Exact performance targets.
+13. Exact database technology.
+14. Exact API architecture.
 
-These decisions SHALL NOT be silently assumed by implementation.
+These decisions SHALL NOT be silently assumed during implementation.
 
 ---
 
@@ -1041,9 +1371,9 @@ The SRS is the baseline against which later development tasks are reviewed.
 
 # 19. Document Status
 
-**Current Status:** Draft
+**Current Status:** Draft — Requirements Review
 
-**Next Review:** Requirements review before Task 004
+**Next Review:** Requirements validation and approval
 
 **Next SDLC Task:**
 
