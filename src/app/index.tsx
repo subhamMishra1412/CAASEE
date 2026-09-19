@@ -1,99 +1,229 @@
+import { AIOrb } from "@/components/AI0rb";
+import { ScheduleSection } from "@/components/ScheduleSection";
+import { Colors } from "@/constants/theme";
+import { mockEvents } from "@/Data/mockData";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useRouter } from "expo-router";
 import {
-  Dimensions,
-  SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
-const { height, width } = Dimensions.get("window");
+export default function HomeScreen() {
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
-export default function App() {
-  const handleGetStarted = () => {
-    console.log("Get Started pressed");
-    // Navigation will go here
+  const handleAIPress = () => {
+    console.log("AI Orb pressed");
+    // Navigate to chat screen when available
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.box}>
-          {/* Decorative symbol */}
-          <Text style={styles.symbol}>✦</Text>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+            {getGreeting()}
+          </Text>
+          <Text style={[styles.name, { color: colors.text }]}>Subham</Text>
+        </View>
+        <TouchableOpacity
+          style={[
+            styles.settingsButton,
+            { backgroundColor: colors.cardBackground },
+          ]}
+          onPress={() => router.push("/profile")}
+        >
+          <Text style={styles.settingsIcon}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
 
-          {/* Title */}
-          <Text style={styles.title}>AI Calendar</Text>
+      {/* Branding */}
+      <View style={styles.brandingContainer}>
+        <Text style={[styles.branding, { color: colors.text }]}>CAASEE</Text>
+        <Text style={[styles.brandingSubtext, { color: colors.textSecondary }]}>
+          Intelligent scheduling assistant
+        </Text>
+      </View>
 
-          {/* Subtitle */}
-          <Text style={styles.subtitle}>Norma,Your E&E Assistant</Text>
+      {/* AI Orb */}
+      <AIOrb onPress={handleAIPress} size="large" colors={colors} />
 
-          {/* Get Started Button */}
-          <TouchableOpacity
-            style={styles.button}
-            activeOpacity={0.7}
-            onPress={handleGetStarted}
-          >
-            <Text style={styles.buttonText}>Get Started</Text>
-          </TouchableOpacity>
+      {/* Quick Stats */}
+      <View
+        style={[
+          styles.statsContainer,
+          { backgroundColor: colors.cardBackground },
+        ]}
+      >
+        <View style={styles.statBox}>
+          <Text style={[styles.statNumber, { color: colors.text }]}>3</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+            Today
+          </Text>
+        </View>
+        <View
+          style={[styles.statDivider, { backgroundColor: colors.border }]}
+        />
+        <View style={styles.statBox}>
+          <Text style={[styles.statNumber, { color: colors.text }]}>12</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+            This week
+          </Text>
+        </View>
+        <View
+          style={[styles.statDivider, { backgroundColor: colors.border }]}
+        />
+        <View style={styles.statBox}>
+          <Text style={[styles.statNumber, { color: colors.text }]}>2</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+            Pending
+          </Text>
         </View>
       </View>
-    </SafeAreaView>
+
+      {/* Today's Schedule */}
+      <ScheduleSection
+        events={mockEvents}
+        colors={colors}
+        onViewAll={() => router.push("/calendar")}
+      />
+
+      {/* AI Insight Card */}
+      <View
+        style={[
+          styles.insightCard,
+          { backgroundColor: colors.insightBackground },
+        ]}
+      >
+        <Text style={styles.insightIcon}>💡</Text>
+        <View style={styles.insightContent}>
+          <Text style={[styles.insightTitle, { color: colors.text }]}>
+            Smart suggestion
+          </Text>
+          <Text style={[styles.insightText, { color: colors.textSecondary }]}>
+            Block 4-5 PM for focused work based on your patterns
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  },
+  scrollContent: {
     paddingHorizontal: 20,
-    backgroundColor: "#fff",
+    paddingTop: 12,
+    paddingBottom: 40,
   },
-  box: {
-    width: "100%",
-    maxWidth: 300,
-    paddingVertical: 50,
-    paddingHorizontal: 25,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 12,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 16,
+    marginBottom: 24,
   },
-  symbol: {
-    fontSize: 28,
-    marginBottom: 10,
-    color: "#000",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    textAlign: "center",
-    color: "#000",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  button: {
-    marginTop: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    backgroundColor: "#000",
-    borderRadius: 6,
-    width: "100%",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 14,
+  greeting: {
+    fontSize: 13,
     fontWeight: "500",
+    letterSpacing: 0.5,
+  },
+  name: {
+    fontSize: 28,
+    fontWeight: "700",
+    marginTop: 2,
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  settingsIcon: {
+    fontSize: 18,
+  },
+  brandingContainer: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  branding: {
+    fontSize: 32,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+  },
+  brandingSubtext: {
+    fontSize: 12,
+    marginTop: 4,
+    letterSpacing: 0.3,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginVertical: 24,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  statBox: {
+    alignItems: "center",
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  statLabel: {
+    fontSize: 11,
+    marginTop: 4,
+    fontWeight: "500",
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+  },
+  insightCard: {
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    marginTop: 20,
+    borderLeftWidth: 3,
+    borderLeftColor: "#0ea5e9",
+  },
+  insightIcon: {
+    fontSize: 20,
+    marginTop: 2,
+  },
+  insightContent: {
+    flex: 1,
+  },
+  insightTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 3,
+  },
+  insightText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
 });
