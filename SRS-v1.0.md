@@ -2,7 +2,7 @@
 
 **Document:** SRS v1.0  
 **Product:** CAASEE  
-**Document Status:** Draft — Requirements Review  
+**Document Status:** Approved — Requirements Baseline  
 **Version:** 1.0  
 **Date:** 2026-09-19
 
@@ -336,6 +336,32 @@ through an authorized authentication flow.
 
 The system SHALL allow the user to disconnect a previously connected
 Google Calendar account.
+
+### FR-008 — Session Termination
+
+The system SHALL allow an authenticated user to explicitly log out of
+CAASee.
+
+After logout, the application SHALL NOT permit access to protected
+calendar data or authenticated operations until the user authenticates
+again.
+
+### FR-009 — Notification Permission Management
+
+The system SHALL request notification permission when required before
+attempting to deliver push notifications.
+
+The system SHALL clearly indicate when notification permission is denied
+or unavailable and SHALL NOT claim that a push notification was delivered
+when permission is unavailable.
+
+### FR-009A — Calendar Permission Management
+
+The system SHALL request required device/calendar permissions before
+performing operations that depend on those permissions.
+
+If required calendar permission is denied or unavailable, the system SHALL
+inform the user and SHALL NOT perform the dependent calendar operation.
 
 ---
 
@@ -706,11 +732,17 @@ The system SHALL provide a daily schedule briefing.
 
 ### FR-111 — Briefing Information
 
-The briefing SHALL summarize relevant events for the current day in
-chronological order.
+The daily briefing SHALL summarize the user's current-day calendar events
+in chronological order.
 
-The briefing SHOULD also identify known conflicts or important scheduling
-conditions.
+For each included event, the briefing SHALL provide, at minimum:
+
+- event title
+- start time
+- end time or duration
+- location, when available
+
+The briefing SHALL identify known scheduling conflicts for the current day.
 
 ### FR-112 — Briefing Interaction
 
@@ -1371,9 +1403,9 @@ The SRS is the baseline against which later development tasks are reviewed.
 
 # 19. Document Status
 
-**Current Status:** Draft — Requirements Review
+**Current Status:** Approved — Requirements Baseline
 
-**Next Review:** Requirements validation and approval
+**Approval:** Requirements baseline approved for downstream SDLC work.
 
 **Next SDLC Task:**
 
