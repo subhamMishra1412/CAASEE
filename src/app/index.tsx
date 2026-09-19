@@ -1,7 +1,7 @@
-import { AIOrb } from "@/components/AI0rb";
+import { AIOrb } from "@/components/AIOrb";
 import { ScheduleSection } from "@/components/ScheduleSection";
 import { Colors } from "@/constants/theme";
-import { mockEvents } from "@/Data/mockData";
+import { mockEvents } from "@/data/mockData";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
 import {
@@ -16,11 +16,6 @@ export default function HomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
-
-  const handleAIPress = () => {
-    console.log("AI Orb pressed");
-    // Navigate to chat screen when available
-  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -63,7 +58,8 @@ export default function HomeScreen() {
       </View>
 
       {/* AI Orb */}
-      <AIOrb onPress={handleAIPress} size="large" colors={colors} />
+      {/* TODO(Task 003): Connect the AI assistant conversation flow. */}
+      <AIOrb size="large" colors={colors} disabled />
 
       {/* Quick Stats */}
       <View

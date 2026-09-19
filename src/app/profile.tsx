@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/theme";
-import { userProfile } from "@/Data/mockData";
+import { userProfile } from "@/data/mockData";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -93,6 +93,9 @@ export default function ProfileScreen() {
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Preferences
         </Text>
+        <Text style={[styles.prototypeNotice, { color: colors.textSecondary }]}>
+          Changes apply only to this prototype session and are not saved.
+        </Text>
         <View
           style={[styles.preferenceRow, { borderBottomColor: colors.border }]}
         >
@@ -168,8 +171,11 @@ export default function ProfileScreen() {
           styles.signoutButton,
           { backgroundColor: colors.cardBackground },
         ]}
+        disabled
+        accessibilityHint="Sign out is planned for Task 003"
+        activeOpacity={1}
       >
-        <Text style={styles.signoutText}>Sign out</Text>
+        <Text style={styles.signoutText}>Sign out (Task 003)</Text>
       </TouchableOpacity>
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
@@ -196,9 +202,13 @@ function SettingRow({
   return (
     <TouchableOpacity
       style={[styles.settingRow, { borderBottomColor: colors.border }]}
+      disabled
+      accessibilityHint={`${label} settings are planned for Task 003`}
+      activeOpacity={1}
     >
       <Text style={styles.settingIcon}>{icon}</Text>
       <Text style={[styles.settingLabel, { color: colors.text }]}>{label}</Text>
+      <Text style={[styles.settingStub, { color: colors.textSecondary }]}>Task 003</Text>
       <Text style={[styles.settingArrow, { color: colors.border }]}>→</Text>
     </TouchableOpacity>
   );
@@ -275,6 +285,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     letterSpacing: 0.5,
   },
+  prototypeNotice: {
+    fontSize: 11,
+    marginTop: -6,
+    marginBottom: 8,
+  },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -347,6 +362,10 @@ const styles = StyleSheet.create({
   settingArrow: {
     fontSize: 14,
     fontWeight: "300",
+  },
+  settingStub: {
+    fontSize: 10,
+    marginRight: 8,
   },
   signoutButton: {
     borderRadius: 10,

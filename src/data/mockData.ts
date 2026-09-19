@@ -1,44 +1,44 @@
-export const mockEvents = [
+import type { CalendarDaySummary, CalendarEvent } from "@/domain/calendar/types";
+
+export const mockEvents: CalendarEvent[] = [
   {
     id: "1",
     title: "Project Planning",
-    time: "09:00 AM",
-    duration: "1h",
-    color: "#e8f5e9",
-    textColor: "#2e7d32",
+    startAt: "2026-09-19T09:00:00+05:30",
+    endAt: "2026-09-19T10:00:00+05:30",
+    timezone: "Asia/Kolkata",
     description: "Team sync on Q4 roadmap",
-    isAI: false,
+    location: "Conference room A",
+    source: "manual",
   },
   {
     id: "2",
     title: "Code Review",
-    time: "11:30 AM",
-    duration: "45m",
-    color: "#e3f2fd",
-    textColor: "#1565c0",
+    startAt: "2026-09-19T11:30:00+05:30",
+    endAt: "2026-09-19T12:15:00+05:30",
+    timezone: "Asia/Kolkata",
     description: "PR feedback session",
-    isAI: false,
+    source: "manual",
   },
   {
     id: "3",
     title: "Focus Time",
-    time: "02:00 PM",
-    duration: "2h",
-    color: "#f3e5f5",
-    textColor: "#6a1b9a",
+    startAt: "2026-09-19T14:00:00+05:30",
+    endAt: "2026-09-19T16:00:00+05:30",
+    timezone: "Asia/Kolkata",
     description: "Deep work block",
-    isAI: true,
+    source: "ai",
   },
 ];
 
-export const mockCalendarEvents = [
-  { date: "19", events: 3 },
-  { date: "20", events: 2 },
-  { date: "21", events: 4 },
-  { date: "22", events: 1 },
-  { date: "23", events: 2 },
-  { date: "24", events: 0 },
-  { date: "25", events: 3 },
+export const mockCalendarEvents: CalendarDaySummary[] = [
+  { date: "2026-09-19", events: 3 },
+  { date: "2026-09-20", events: 2 },
+  { date: "2026-09-21", events: 4 },
+  { date: "2026-09-22", events: 1 },
+  { date: "2026-09-23", events: 2 },
+  { date: "2026-09-24", events: 0 },
+  { date: "2026-09-25", events: 3 },
 ];
 
 export const mockTasks = [

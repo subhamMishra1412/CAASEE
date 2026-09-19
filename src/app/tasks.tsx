@@ -1,6 +1,6 @@
 import { TaskItem } from "@/components/TaskItem";
 import { Colors } from "@/constants/theme";
-import { mockTasks } from "@/Data/mockData";
+import { mockTasks } from "@/data/mockData";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useState } from "react";
 import {
@@ -36,6 +36,8 @@ export default function TasksScreen() {
 
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalCount = tasks.length;
+  const completionPercentage =
+    totalCount === 0 ? 0 : (completedCount / totalCount) * 100;
 
   return (
     <ScrollView
@@ -53,7 +55,9 @@ export default function TasksScreen() {
         </View>
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: colors.text }]}
-          activeOpacity={0.7}
+          disabled
+          accessibilityHint="Task creation is planned for Task 003"
+          activeOpacity={1}
         >
           <Text style={[styles.addIcon, { color: colors.background }]}>+</Text>
         </TouchableOpacity>
@@ -71,14 +75,17 @@ export default function TasksScreen() {
             style={[
               styles.progressFill,
               {
-                width: `${(completedCount / totalCount) * 100}%`,
+                width: `${completionPercentage}%`,
                 backgroundColor: colors.text,
               },
             ]}
           />
         </View>
         <Text style={[styles.progressText, { color: colors.textSecondary }]}>
-          {Math.round((completedCount / totalCount) * 100)}% complete
+          {Math.round(completionPercentage)}% complete
+        </Text>
+        <Text style={[styles.prototypeNotice, { color: colors.textSecondary }]}>
+          Task completion is stored only for this prototype session.
         </Text>
       </View>
 
@@ -120,7 +127,6 @@ export default function TasksScreen() {
               key={task.id}
               task={task}
               colors={colors}
-              onPress={() => {}}
               onToggle={() => handleToggleTask(task.id)}
             />
           ))}
@@ -144,12 +150,12 @@ export default function TasksScreen() {
         <Text style={styles.addTaskIcon}>+</Text>
         <View style={styles.addTaskContent}>
           <Text style={[styles.addTaskTitle, { color: colors.text }]}>
-            Create a new task
+            Task creation is coming in Task 003
           </Text>
           <Text
             style={[styles.addTaskSubtext, { color: colors.textSecondary }]}
           >
-            Set priority and due date for better organization
+            This prototype does not create or persist tasks yet.
           </Text>
         </View>
       </View>
@@ -208,6 +214,10 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 12,
     fontWeight: "500",
+  },
+  prototypeNotice: {
+    fontSize: 11,
+    marginTop: 4,
   },
   filterContainer: {
     flexDirection: "row",

@@ -1,20 +1,10 @@
 import { Colors } from "@/constants/theme";
+import type { CalendarEvent } from "@/domain/calendar/types";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { EventCard } from "./EventCard";
 
-interface Event {
-  id: string;
-  title: string;
-  time: string;
-  duration: string;
-  color: string;
-  textColor: string;
-  description?: string;
-  isAI: boolean;
-}
-
 interface ScheduleSectionProps {
-  events: Event[];
+  events: CalendarEvent[];
   onViewAll: () => void;
   colors: (typeof Colors)["light"];
 }
@@ -45,7 +35,6 @@ export function ScheduleSection({
               event={event}
               size="compact"
               colors={colors}
-              onPress={() => {}}
             />
           ))}
         </View>

@@ -9,12 +9,18 @@ import {
 } from "react-native";
 
 interface AIorbProps {
-  onPress: () => void;
+  onPress?: () => void;
   size?: "default" | "large";
   colors: (typeof Colors)["light"];
+  disabled?: boolean;
 }
 
-export function AIOrb({ onPress, size = "default", colors }: AIorbProps) {
+export function AIOrb({
+  onPress,
+  size = "default",
+  colors,
+  disabled = false,
+}: AIorbProps) {
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -50,7 +56,10 @@ export function AIOrb({ onPress, size = "default", colors }: AIorbProps) {
     <TouchableOpacity
       style={styles.container}
       onPress={onPress}
-      activeOpacity={0.7}
+      disabled={disabled}
+      accessibilityState={{ disabled }}
+      accessibilityHint={disabled ? "AI chat is planned for Task 003" : undefined}
+      activeOpacity={disabled ? 1 : 0.7}
     >
       {/* Outer pulse ring */}
       <Animated.View
@@ -96,7 +105,9 @@ export function AIOrb({ onPress, size = "default", colors }: AIorbProps) {
       />
 
       {/* Label */}
-      <Text style={[styles.label, { color: colors.text }]}>Ask CAASEE</Text>
+      <Text style={[styles.label, { color: colors.text }]}> 
+        {disabled ? "AI chat coming in Task 003" : "Ask CAASEE"}
+      </Text>
     </TouchableOpacity>
   );
 }

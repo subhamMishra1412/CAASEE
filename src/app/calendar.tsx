@@ -1,7 +1,7 @@
 import { CalendarGrid } from "@/components/CalendarGrid";
 import { EventCard } from "@/components/EventCard";
 import { Colors } from "@/constants/theme";
-import { mockCalendarEvents, mockEvents } from "@/Data/mockData";
+import { mockCalendarEvents, mockEvents } from "@/data/mockData";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -20,8 +20,44 @@ export default function CalendarScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
   const [view, setView] = useState<ViewType>("month");
+  const [displayedMonth, setDisplayedMonth] = useState(() => {
+    const currentDate = new Date();
+    return new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  });
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
 
   const views: ViewType[] = ["month", "week", "day"];
+  const monthLabel = displayedMonth.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+  const todayLabel = new Date().toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+  });
+  const selectedDateLabel = selectedDate.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const weekStart = new Date(selectedDate);
+  weekStart.setDate(selectedDate.getDate() - selectedDate.getDay());
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  const weekRangeLabel = `${weekStart.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  })} – ${weekEnd.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  })}`;
+
+  const changeMonth = (offset: number) => {
+    setDisplayedMonth(
+      (currentMonth) =>
+        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1),
+    );
+  };
 
   return (
     <ScrollView
@@ -33,10 +69,10 @@ export default function CalendarScreen() {
       <View style={styles.header}>
         <View>
           <Text style={[styles.dateText, { color: colors.text }]}>
-            September 2026
+            {monthLabel}
           </Text>
           <Text style={[styles.currentDate, { color: colors.textSecondary }]}>
-            Today is the 19th
+            Today is {todayLabel}
           </Text>
         </View>
         <TouchableOpacity
@@ -47,6 +83,23 @@ export default function CalendarScreen() {
           onPress={() => router.push("/profile")}
         >
           <Text style={styles.profileIcon}>👤</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.monthNavigation}>
+        <TouchableOpacity
+          accessibilityLabel="Previous month"
+          style={[styles.navigationButton, { backgroundColor: colors.cardBackground }]}
+          onPress={() => changeMonth(-1)}
+        >
+          <Text style={[styles.navigationIcon, { color: colors.text }]}>Previous</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityLabel="Next month"
+          style={[styles.navigationButton, { backgroundColor: colors.cardBackground }]}
+          onPress={() => changeMonth(1)}
+        >
+          <Text style={[styles.navigationIcon, { color: colors.text }]}>Next</Text>
         </TouchableOpacity>
       </View>
 
@@ -87,7 +140,13 @@ export default function CalendarScreen() {
 
       {/* Calendar Grid */}
       {view === "month" && (
-        <CalendarGrid events={mockCalendarEvents} colors={colors} />
+        <CalendarGrid
+          events={mockCalendarEvents}
+          colors={colors}
+          month={displayedMonth}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
       )}
 
       {/* Week View Placeholder */}
@@ -104,7 +163,7 @@ export default function CalendarScreen() {
           <Text
             style={[styles.placeholderSubtext, { color: colors.textSecondary }]}
           >
-            Sep 16 - Sep 22
+            {weekRangeLabel}
           </Text>
         </View>
       )}
@@ -113,7 +172,7 @@ export default function CalendarScreen() {
       {view === "day" && (
         <View style={styles.dayViewContainer}>
           <Text style={[styles.dayViewDate, { color: colors.text }]}>
-            Friday, September 19
+            {selectedDateLabel}
           </Text>
           <View style={styles.timelineContainer}>
             {mockEvents.map((event) => (
@@ -121,7 +180,6 @@ export default function CalendarScreen() {
                 key={event.id}
                 event={event}
                 colors={colors}
-                onPress={() => {}}
               />
             ))}
           </View>
@@ -138,7 +196,6 @@ export default function CalendarScreen() {
             key={event.id}
             event={event}
             colors={colors}
-            onPress={() => {}}
           />
         ))}
       </View>
@@ -179,6 +236,21 @@ const styles = StyleSheet.create({
   },
   profileIcon: {
     fontSize: 18,
+  },
+  monthNavigation: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8,
+    marginBottom: 12,
+  },
+  navigationButton: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  navigationIcon: {
+    fontSize: 12,
+    fontWeight: "600",
   },
   viewSelector: {
     flexDirection: "row",

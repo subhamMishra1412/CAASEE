@@ -53,6 +53,7 @@ export default function RootLayout() {
             tabBarIcon: ({ color }) => <TabIcon icon="✓" color={color} />,
           }}
         />
+        <Tabs.Screen name="profile" options={{ href: null }} />
       </Tabs>
     </SafeAreaView>
   );

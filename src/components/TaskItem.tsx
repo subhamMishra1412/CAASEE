@@ -11,27 +11,29 @@ interface Task {
 
 interface TaskItemProps {
   task: Task;
-  onPress: () => void;
+  onPress?: () => void;
   onToggle: () => void;
   colors: (typeof Colors)["light"];
 }
 
 export function TaskItem({ task, onPress, onToggle, colors }: TaskItemProps) {
+  const isInteractive = Boolean(onPress);
   const priorityColors = {
-    high: "#ff6b6b",
-    medium: "#ffa500",
-    low: "#51cf66",
+    high: colors.priorityHigh,
+    medium: colors.priorityMedium,
+    low: colors.priorityLow,
   };
 
   return (
-    <TouchableOpacity
+    <View
       style={[
         styles.container,
         task.completed && { opacity: 0.6 },
-        { borderLeftColor: colors.cardBackground },
+        {
+          backgroundColor: colors.cardBackground,
+          borderLeftColor: colors.border,
+        },
       ]}
-      onPress={onPress}
-      activeOpacity={0.7}
     >
       <TouchableOpacity
         style={[
@@ -47,10 +49,20 @@ export function TaskItem({ task, onPress, onToggle, colors }: TaskItemProps) {
         ]}
         onPress={onToggle}
       >
-        {task.completed && <Text style={styles.checkmark}>✓</Text>}
+        {task.completed && (
+          <Text style={[styles.checkmark, { color: colors.background }]}>✓</Text>
+        )}
       </TouchableOpacity>
 
-      <View style={styles.content}>
+      <TouchableOpacity
+        style={styles.content}
+        onPress={onPress}
+        disabled={!isInteractive}
+        accessibilityHint={
+          isInteractive ? undefined : "Task details are planned for Task 003"
+        }
+        activeOpacity={isInteractive ? 0.7 : 1}
+      >
         <Text
           style={[
             styles.title,
@@ -71,14 +83,16 @@ export function TaskItem({ task, onPress, onToggle, colors }: TaskItemProps) {
               { backgroundColor: priorityColors[task.priority] },
             ]}
           >
-            <Text style={styles.priorityText}>{task.priority}</Text>
+            <Text style={[styles.priorityText, { color: colors.background }]}>
+              {task.priority}
+            </Text>
           </View>
           <Text style={[styles.dueDate, { color: colors.textSecondary }]}>
             {task.dueDate}
           </Text>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -86,7 +100,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 14,
     marginVertical: 8,
@@ -102,7 +115,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   checkmark: {
-    color: "#fff",
     fontSize: 14,
     fontWeight: "700",
   },
@@ -127,7 +139,6 @@ const styles = StyleSheet.create({
   priorityText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#fff",
   },
   dueDate: {
     fontSize: 11,
