@@ -1,7 +1,7 @@
 import { mockEvents } from "@/data/mockData";
 import type {
-    CalendarDaySummary,
-    CalendarEvent,
+  CalendarDaySummary,
+  CalendarEvent,
 } from "@/domain/calendar/types";
 import { useEffect, useState } from "react";
 
@@ -13,6 +13,14 @@ export function getCalendarEvents(): CalendarEvent[] {
 }
 
 export function addCalendarEvent(event: CalendarEvent): void {
+  const alreadyExists = calendarEvents.some(
+    (existingEvent) => existingEvent.id === event.id,
+  );
+
+  if (alreadyExists) {
+    return;
+  }
+
   calendarEvents = [...calendarEvents, event];
   listeners.forEach((listener) => listener());
 }
