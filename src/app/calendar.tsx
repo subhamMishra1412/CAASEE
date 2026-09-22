@@ -1,203 +1,102 @@
-import { CalendarGrid } from "@/components/CalendarGrid";
-import { EventCard } from "@/components/EventCard";
-import { Colors } from "@/constants/theme";
-import { mockCalendarEvents, mockEvents } from "@/data/mockData";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { useMemo, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-type ViewType = "month" | "week" | "day";
+import { CalendarGrid } from "@/components/CalendarGrid";
+import { Colors } from "@/constants/theme";
+import {
+  getCalendarDaySummaries,
+  useCalendarEvents,
+} from "@/domain/calendar/calendarStore";
 
 export default function CalendarScreen() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
-  const [view, setView] = useState<ViewType>("month");
-  const [displayedMonth, setDisplayedMonth] = useState(() => {
-    const currentDate = new Date();
-    return new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  });
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const colors = Colors.light;
 
-  const views: ViewType[] = ["month", "week", "day"];
-  const monthLabel = displayedMonth.toLocaleDateString(undefined, {
-    month: "long",
-    year: "numeric",
-  });
-  const todayLabel = new Date().toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-  });
-  const selectedDateLabel = selectedDate.toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-  const weekStart = new Date(selectedDate);
-  weekStart.setDate(selectedDate.getDate() - selectedDate.getDay());
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  const weekRangeLabel = `${weekStart.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  })} – ${weekEnd.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  })}`;
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [month, setMonth] = useState(new Date());
 
-  const changeMonth = (offset: number) => {
-    setDisplayedMonth(
-      (currentMonth) =>
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1),
-    );
-  };
+  const calendarEvents = useCalendarEvents();
+
+  const calendarDays = useMemo(
+    () => getCalendarDaySummaries(calendarEvents),
+    [calendarEvents],
+  );
+
+  const selectedDateKey = [
+    selectedDate.getFullYear(),
+    String(selectedDate.getMonth() + 1).padStart(2, "0"),
+    String(selectedDate.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const selectedEvents = calendarEvents.filter(
+    (event) => event.startAt.slice(0, 10) === selectedDateKey,
+  );
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
+      style={{ backgroundColor: colors.background }}
+      contentContainerStyle={styles.container}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={[styles.dateText, { color: colors.text }]}>
-            {monthLabel}
-          </Text>
-          <Text style={[styles.currentDate, { color: colors.textSecondary }]}>
-            Today is {todayLabel}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[
-            styles.profileButton,
-            { backgroundColor: colors.cardBackground },
-          ]}
-          onPress={() => router.push("/profile")}
-        >
-          <Text style={styles.profileIcon}>👤</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={[styles.title, { color: colors.text }]}>Calendar</Text>
 
-      <View style={styles.monthNavigation}>
-        <TouchableOpacity
-          accessibilityLabel="Previous month"
-          style={[styles.navigationButton, { backgroundColor: colors.cardBackground }]}
-          onPress={() => changeMonth(-1)}
-        >
-          <Text style={[styles.navigationIcon, { color: colors.text }]}>Previous</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityLabel="Next month"
-          style={[styles.navigationButton, { backgroundColor: colors.cardBackground }]}
-          onPress={() => changeMonth(1)}
-        >
-          <Text style={[styles.navigationIcon, { color: colors.text }]}>Next</Text>
-        </TouchableOpacity>
-      </View>
+      <CalendarGrid
+        events={calendarDays}
+        colors={colors}
+        month={month}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+      />
 
-      {/* View Selector */}
-      <View
-        style={[
-          styles.viewSelector,
-          { backgroundColor: colors.cardBackground },
-        ]}
-      >
-        {views.map((v) => (
-          <TouchableOpacity
-            key={v}
-            style={[
-              styles.viewButton,
-              view === v && [
-                styles.activeView,
-                { backgroundColor: colors.text },
-              ],
-            ]}
-            onPress={() => setView(v)}
-          >
-            <Text
+      <View style={styles.eventsSection}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Events
+        </Text>
+
+        {selectedEvents.length === 0 ? (
+          <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+            No events for this day.
+          </Text>
+        ) : (
+          selectedEvents.map((event) => (
+            <View
+              key={event.id}
               style={[
-                styles.viewButtonText,
-                view === v && [
-                  styles.activeViewText,
-                  { color: colors.background },
-                ],
-                view !== v && { color: colors.textSecondary },
+                styles.eventCard,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                },
               ]}
             >
-              {v.charAt(0).toUpperCase() + v.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <Text style={[styles.eventTitle, { color: colors.text }]}>
+                {event.title}
+              </Text>
 
-      {/* Calendar Grid */}
-      {view === "month" && (
-        <CalendarGrid
-          events={mockCalendarEvents}
-          colors={colors}
-          month={displayedMonth}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-        />
-      )}
+              <Text style={[styles.eventTime, { color: colors.mutedText }]}>
+                {new Date(event.startAt).toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}{" "}
+                –{" "}
+                {new Date(event.endAt).toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </Text>
 
-      {/* Week View Placeholder */}
-      {view === "week" && (
-        <View
-          style={[
-            styles.viewPlaceholder,
-            { backgroundColor: colors.cardBackground },
-          ]}
-        >
-          <Text style={[styles.placeholderText, { color: colors.text }]}>
-            Week view coming soon
-          </Text>
-          <Text
-            style={[styles.placeholderSubtext, { color: colors.textSecondary }]}
-          >
-            {weekRangeLabel}
-          </Text>
-        </View>
-      )}
+              {event.location ? (
+                <Text style={[styles.eventDetail, { color: colors.mutedText }]}>
+                  {event.location}
+                </Text>
+              ) : null}
 
-      {/* Day View */}
-      {view === "day" && (
-        <View style={styles.dayViewContainer}>
-          <Text style={[styles.dayViewDate, { color: colors.text }]}>
-            {selectedDateLabel}
-          </Text>
-          <View style={styles.timelineContainer}>
-            {mockEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                colors={colors}
-              />
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Upcoming Events Section */}
-      <View style={styles.upcomingSection}>
-        <Text style={[styles.upcomingTitle, { color: colors.text }]}>
-          Upcoming Events
-        </Text>
-        {mockEvents.map((event) => (
-          <EventCard
-            key={event.id}
-            event={event}
-            colors={colors}
-          />
-        ))}
+              {event.description ? (
+                <Text style={[styles.eventDetail, { color: colors.mutedText }]}>
+                  {event.description}
+                </Text>
+              ) : null}
+            </View>
+          ))
+        )}
       </View>
     </ScrollView>
   );
@@ -205,110 +104,37 @@ export default function CalendarScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    padding: 20,
+    gap: 24,
   },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  dateText: {
-    fontSize: 26,
+  title: {
+    fontSize: 28,
     fontWeight: "700",
   },
-  currentDate: {
-    fontSize: 13,
-    marginTop: 4,
-    fontWeight: "500",
+  eventsSection: {
+    gap: 12,
   },
-  profileButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
   },
-  profileIcon: {
-    fontSize: 18,
-  },
-  monthNavigation: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 8,
-    marginBottom: 12,
-  },
-  navigationButton: {
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  navigationIcon: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  viewSelector: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 24,
-    padding: 4,
-    borderRadius: 10,
-  },
-  viewButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  activeView: {
-    borderRadius: 8,
-  },
-  viewButtonText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  activeViewText: {
-    fontWeight: "600",
-  },
-  viewPlaceholder: {
-    borderRadius: 12,
-    paddingVertical: 48,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  placeholderText: {
+  emptyText: {
     fontSize: 14,
-    fontWeight: "600",
   },
-  placeholderSubtext: {
-    fontSize: 12,
-    marginTop: 4,
+  eventCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    gap: 6,
   },
-  dayViewContainer: {
-    marginVertical: 20,
-  },
-  dayViewDate: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 16,
-  },
-  timelineContainer: {
-    gap: 2,
-  },
-  upcomingSection: {
-    marginTop: 28,
-  },
-  upcomingTitle: {
+  eventTitle: {
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 14,
-    letterSpacing: 0.3,
+  },
+  eventTime: {
+    fontSize: 14,
+  },
+  eventDetail: {
+    fontSize: 13,
   },
 });

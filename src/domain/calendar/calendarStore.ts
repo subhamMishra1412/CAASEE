@@ -1,5 +1,8 @@
-import type { CalendarEvent, CalendarDaySummary } from "@/domain/calendar/types";
 import { mockEvents } from "@/data/mockData";
+import type {
+    CalendarDaySummary,
+    CalendarEvent,
+} from "@/domain/calendar/types";
 import { useEffect, useState } from "react";
 
 let calendarEvents: CalendarEvent[] = [...mockEvents];

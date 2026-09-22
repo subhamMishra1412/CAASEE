@@ -1,12 +1,14 @@
 import { AIOrb } from "@/components/AIOrb";
-import { EventComposer } from "@/components/EventComposer";
+import EventComposer from "@/components/EventComposer";
 import { ScheduleSection } from "@/components/ScheduleSection";
 import { Colors } from "@/constants/theme";
-import { mockEvents } from "@/data/mockData";
+import {
+  addCalendarEvent,
+  useCalendarEvents,
+} from "@/domain/calendar/calendarStore";
 import type { CalendarEvent } from "@/domain/calendar/types";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -20,7 +22,7 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
-  const [events, setEvents] = useState<CalendarEvent[]>(mockEvents);
+  const events = useCalendarEvents();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -77,8 +79,8 @@ export default function HomeScreen() {
         onEventIntent={(event) => {
           console.log("Proposed event:", event);
         }}
-        onSchedule={(event) => {
-          setEvents((currentEvents) => [...currentEvents, event]);
+        onSchedule={(event: CalendarEvent) => {
+          addCalendarEvent(event);
         }}
       />
 

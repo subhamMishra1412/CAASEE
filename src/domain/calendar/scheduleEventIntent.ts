@@ -1,4 +1,4 @@
-type ScheduleEventIntent = {
+export type ScheduleEventIntent = {
   title: string;
   startAt: string;
   endAt: string;
