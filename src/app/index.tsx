@@ -3,7 +3,7 @@ import EventComposer from "@/components/EventComposer";
 import { ScheduleSection } from "@/components/ScheduleSection";
 import { Colors } from "@/constants/theme";
 import {
-  addCalendarEvent,
+  scheduleCalendarEvent,
   useCalendarEvents,
 } from "@/domain/calendar/calendarStore";
 import type { CalendarEvent } from "@/domain/calendar/types";
@@ -80,7 +80,7 @@ export default function HomeScreen() {
           console.log("Proposed event:", event);
         }}
         onSchedule={(event: CalendarEvent) => {
-          addCalendarEvent(event);
+          return scheduleCalendarEvent(event);
         }}
       />
 

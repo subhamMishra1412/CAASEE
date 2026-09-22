@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { getCalendarEvents } from "@/domain/calendar/calendarStore";
+import {
+  getCalendarEvents,
+  type CalendarScheduleResult,
+} from "@/domain/calendar/calendarStore";
 import { parseEventInput } from "@/domain/calendar/eventComposer";
 import { checkAvailability } from "@/domain/calendar/scheduling/checkAvailability";
 import { createScheduleProposal } from "@/domain/calendar/scheduling/scheduleEvent";
@@ -26,7 +29,7 @@ type EventComposerProps = {
     description?: string;
     participant?: string;
   }) => void;
-  onSchedule?: (event: CalendarEvent) => void;
+  onSchedule?: (event: CalendarEvent) => CalendarScheduleResult;
 };
 
 export default function EventComposer({
@@ -131,7 +134,20 @@ export default function EventComposer({
       return;
     }
 
-    onSchedule?.(proposedEvent);
+    const result = onSchedule?.(proposedEvent);
+
+    if (!result || !result.scheduled) {
+      if (result && !result.scheduled) {
+        const currentEvents = getCalendarEvents();
+
+        setProposedEvent(null);
+        setConflictEvent(result.conflict);
+        setAlternatives(suggestAlternativeTimes(proposedEvent, currentEvents));
+        setScheduled(false);
+      }
+
+      return;
+    }
 
     setScheduled(true);
     setProposedEvent(null);

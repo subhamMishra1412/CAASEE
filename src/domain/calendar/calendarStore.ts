@@ -1,4 +1,5 @@
 import { mockEvents } from "@/data/mockData";
+import { checkAvailability } from "@/domain/calendar/scheduling/checkAvailability";
 import type {
   CalendarDaySummary,
   CalendarEvent,
@@ -23,6 +24,34 @@ export function addCalendarEvent(event: CalendarEvent): void {
 
   calendarEvents = [...calendarEvents, event];
   listeners.forEach((listener) => listener());
+}
+
+export type CalendarScheduleResult =
+  | {
+      scheduled: true;
+    }
+  | {
+      scheduled: false;
+      conflict: CalendarEvent;
+    };
+
+export function scheduleCalendarEvent(
+  event: CalendarEvent,
+): CalendarScheduleResult {
+  const availability = checkAvailability(event, getCalendarEvents());
+
+  if (!availability.available) {
+    return {
+      scheduled: false,
+      conflict: availability.conflict,
+    };
+  }
+
+  addCalendarEvent(event);
+
+  return {
+    scheduled: true,
+  };
 }
 
 export function subscribeCalendarEvents(listener: () => void): () => void {
