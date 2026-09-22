@@ -64,8 +64,8 @@ export default function HomeScreen() {
       {/* Event Composer */}
       <EventComposer
         colors={colors}
-        onEventDraft={(event) => {
-          console.log("Event draft:", event);
+        onEventIntent={(event) => {
+          console.log("Proposed event:", event);
         }}
       />
 

@@ -1,9 +1,4 @@
-import { Colors } from "@/constants/theme";
-import {
-    EventDraft,
-    formatEventDate,
-    parseEventInput,
-} from "@/domain/calendar/eventComposer";
+import type { ScheduleEventIntent } from "@/domain/calendar/scheduleEventIntent";
 import { useState } from "react";
 import {
     StyleSheet,
@@ -13,180 +8,127 @@ import {
     View,
 } from "react-native";
 
-interface EventComposerProps {
-  colors: (typeof Colors)["light"];
-  onEventDraft?: (event: EventDraft) => void;
-}
+type EventComposerProps = {
+  colors: {
+    text: string;
+    textSecondary: string;
+    cardBackground: string;
+    border: string;
+  };
+  onEventIntent?: (event: ScheduleEventIntent) => void;
+};
 
-export function EventComposer({ colors, onEventDraft }: EventComposerProps) {
-  const [input, setInput] = useState("");
-  const [draft, setDraft] = useState<EventDraft | null>(null);
+export function EventComposer({ colors, onEventIntent }: EventComposerProps) {
+  const [text, setText] = useState("");
+  const [proposedEvent, setProposedEvent] =
+    useState<ScheduleEventIntent | null>(null);
 
-  const handleCompose = () => {
-    const value = input.trim();
+  const handleSubmit = () => {
+    if (!text.trim()) return;
 
-    if (!value) {
-      return;
-    }
+    // Temporary frontend representation.
+    // AI parsing will replace this later.
+    const event: ScheduleEventIntent = {
+      title: "Meeting with Rahul",
+      startAt: "2026-09-23T20:00:00+05:30",
+      endAt: "2026-09-23T21:00:00+05:30",
+      timezone: "Asia/Kolkata",
+      location: "Office",
+      participant: "Rahul",
+    };
 
-    const parsedEvent = parseEventInput(value);
+    setProposedEvent(event);
+    onEventIntent?.(event);
+  };
 
-    setDraft(parsedEvent);
-    onEventDraft?.(parsedEvent);
+  const handleCancel = () => {
+    setProposedEvent(null);
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.border,
-        },
-      ]}
-    >
-      <Text style={[styles.title, { color: colors.text }]}>
-        Schedule something
-      </Text>
-
-      <Text
-        style={[
-          styles.subtitle,
-          {
-            color: colors.textSecondary,
-          },
-        ]}
-      >
-        Tell CAASEE what you want to schedule.
+    <View style={styles.container}>
+      <Text style={[styles.label, { color: colors.text }]}>
+        What would you like to schedule?
       </Text>
 
       <TextInput
-        value={input}
-        onChangeText={setInput}
-        placeholder="Schedule a meeting with Rahul tomorrow at 8 PM at the office."
+        value={text}
+        onChangeText={setText}
+        placeholder="e.g. Schedule a meeting with Rahul tomorrow at 8 PM at the office"
         placeholderTextColor={colors.textSecondary}
         multiline
-        textAlignVertical="top"
         style={[
           styles.input,
           {
             color: colors.text,
-            backgroundColor: colors.background,
+            backgroundColor: colors.cardBackground,
             borderColor: colors.border,
           },
         ]}
       />
 
       <TouchableOpacity
-        style={[
-          styles.composeButton,
-          {
-            backgroundColor: colors.text,
-            opacity: input.trim() ? 1 : 0.5,
-          },
-        ]}
-        onPress={handleCompose}
-        disabled={!input.trim()}
-        activeOpacity={0.8}
+        style={[styles.submitButton, { backgroundColor: colors.text }]}
+        onPress={handleSubmit}
       >
-        <Text style={[styles.composeButtonText, { color: colors.background }]}>
-          Compose Event
+        <Text style={[styles.submitText, { color: colors.cardBackground }]}>
+          Understand request
         </Text>
       </TouchableOpacity>
 
-      {draft && (
+      {proposedEvent && (
         <View
           style={[
-            styles.preview,
+            styles.eventCard,
             {
-              backgroundColor: colors.background,
+              backgroundColor: colors.cardBackground,
               borderColor: colors.border,
             },
           ]}
         >
-          <Text style={[styles.previewTitle, { color: colors.text }]}>
-            Event preview
+          <Text style={[styles.eventTitle, { color: colors.text }]}>
+            {proposedEvent.title}
           </Text>
 
-          <View style={styles.previewRow}>
+          <Text style={[styles.eventDate, { color: colors.textSecondary }]}>
+            Tomorrow
+          </Text>
+
+          <Text style={[styles.eventTime, { color: colors.text }]}>
+            8:00 PM – 9:00 PM
+          </Text>
+
+          {proposedEvent.location && (
             <Text
-              style={[styles.previewLabel, { color: colors.textSecondary }]}
+              style={[styles.eventLocation, { color: colors.textSecondary }]}
             >
-              Title
+              {proposedEvent.location}
             </Text>
-
-            <Text style={[styles.previewValue, { color: colors.text }]}>
-              {draft.title}
-            </Text>
-          </View>
-
-          {draft.attendee && (
-            <View style={styles.previewRow}>
-              <Text
-                style={[styles.previewLabel, { color: colors.textSecondary }]}
-              >
-                With
-              </Text>
-
-              <Text style={[styles.previewValue, { color: colors.text }]}>
-                {draft.attendee}
-              </Text>
-            </View>
           )}
 
-          {draft.date && (
-            <View style={styles.previewRow}>
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.cancelButton, { borderColor: colors.border }]}
+              onPress={handleCancel}
+            >
+              <Text style={[styles.cancelText, { color: colors.text }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.scheduleButton, { backgroundColor: colors.text }]}
+              onPress={() => {
+                // Intentionally empty.
+                // Calendar creation will be implemented later.
+              }}
+            >
               <Text
-                style={[styles.previewLabel, { color: colors.textSecondary }]}
+                style={[styles.scheduleText, { color: colors.cardBackground }]}
               >
-                Date
+                Schedule
               </Text>
-
-              <Text style={[styles.previewValue, { color: colors.text }]}>
-                {formatEventDate(draft.date)}
-              </Text>
-            </View>
-          )}
-
-          {draft.time && (
-            <View style={styles.previewRow}>
-              <Text
-                style={[styles.previewLabel, { color: colors.textSecondary }]}
-              >
-                Time
-              </Text>
-
-              <Text style={[styles.previewValue, { color: colors.text }]}>
-                {draft.time}
-              </Text>
-            </View>
-          )}
-
-          {draft.location && (
-            <View style={styles.previewRow}>
-              <Text
-                style={[styles.previewLabel, { color: colors.textSecondary }]}
-              >
-                Location
-              </Text>
-
-              <Text style={[styles.previewValue, { color: colors.text }]}>
-                {draft.location}
-              </Text>
-            </View>
-          )}
-
-          <View
-            style={[
-              styles.status,
-              {
-                backgroundColor: colors.insightBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.statusText, { color: colors.textSecondary }]}>
-              Draft only — nothing has been added to your calendar yet.
-            </Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -196,84 +138,92 @@ export function EventComposer({ colors, onEventDraft }: EventComposerProps) {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    marginTop: 24,
+    marginTop: 20,
   },
 
-  title: {
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+
+  input: {
+    minHeight: 90,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 14,
+    textAlignVertical: "top",
+  },
+
+  submitButton: {
+    marginTop: 10,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+
+  submitText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  eventCard: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 16,
+  },
+
+  eventTitle: {
     fontSize: 18,
     fontWeight: "700",
   },
 
-  subtitle: {
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 4,
-    marginBottom: 14,
-  },
-
-  input: {
-    minHeight: 100,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+  eventDate: {
     fontSize: 14,
-    lineHeight: 20,
+    marginTop: 12,
   },
 
-  composeButton: {
-    marginTop: 12,
+  eventTime: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+
+  eventLocation: {
+    fontSize: 14,
+    marginTop: 8,
+  },
+
+  actions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 20,
+  },
+
+  cancelButton: {
+    flex: 1,
+    borderWidth: 1,
     borderRadius: 10,
-    paddingVertical: 13,
+    paddingVertical: 11,
     alignItems: "center",
   },
 
-  composeButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  preview: {
-    marginTop: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-  },
-
-  previewTitle: {
+  cancelText: {
     fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-
-  previewRow: {
-    flexDirection: "row",
-    marginBottom: 9,
-  },
-
-  previewLabel: {
-    width: 72,
-    fontSize: 12,
     fontWeight: "600",
   },
 
-  previewValue: {
+  scheduleButton: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: "500",
+    borderRadius: 10,
+    paddingVertical: 11,
+    alignItems: "center",
   },
 
-  status: {
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 6,
-  },
-
-  statusText: {
-    fontSize: 11,
-    lineHeight: 15,
+  scheduleText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
