@@ -1,4 +1,5 @@
 import { AIOrb } from "@/components/AIOrb";
+import { EventComposer } from "@/components/EventComposer";
 import { ScheduleSection } from "@/components/ScheduleSection";
 import { Colors } from "@/constants/theme";
 import { mockEvents } from "@/data/mockData";
@@ -60,6 +61,13 @@ export default function HomeScreen() {
       {/* AI Orb */}
       {/* TODO(Task 003): Connect the AI assistant conversation flow. */}
       <AIOrb size="large" colors={colors} disabled />
+      {/* Event Composer */}
+      <EventComposer
+        colors={colors}
+        onEventDraft={(event) => {
+          console.log("Event draft:", event);
+        }}
+      />
 
       {/* Quick Stats */}
       <View
