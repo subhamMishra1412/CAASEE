@@ -110,6 +110,16 @@ export default function EventComposer({
   };
 
   const handleSelectAlternative = (event: CalendarEvent) => {
+    const availability = checkAvailability(event, getCalendarEvents());
+
+    if (!availability.available) {
+      setProposedEvent(null);
+      setConflictEvent(availability.conflict);
+      setAlternatives(suggestAlternativeTimes(event, getCalendarEvents()));
+      setScheduled(false);
+      return;
+    }
+
     setProposedEvent(event);
     setConflictEvent(null);
     setAlternatives([]);
