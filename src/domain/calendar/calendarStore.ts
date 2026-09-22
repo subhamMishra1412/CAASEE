@@ -38,7 +38,20 @@ export type CalendarScheduleResult =
 export function scheduleCalendarEvent(
   event: CalendarEvent,
 ): CalendarScheduleResult {
-  const availability = checkAvailability(event, getCalendarEvents());
+  const currentEvents = getCalendarEvents();
+
+  const duplicate = currentEvents.find(
+    (existingEvent) => existingEvent.id === event.id,
+  );
+
+  if (duplicate) {
+    return {
+      scheduled: false,
+      conflict: duplicate,
+    };
+  }
+
+  const availability = checkAvailability(event, currentEvents);
 
   if (!availability.available) {
     return {
@@ -48,6 +61,17 @@ export function scheduleCalendarEvent(
   }
 
   addCalendarEvent(event);
+
+  const wasAdded = getCalendarEvents().some(
+    (existingEvent) => existingEvent.id === event.id,
+  );
+
+  if (!wasAdded) {
+    return {
+      scheduled: false,
+      conflict: event,
+    };
+  }
 
   return {
     scheduled: true,

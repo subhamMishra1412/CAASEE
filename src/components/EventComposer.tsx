@@ -136,16 +136,21 @@ export default function EventComposer({
 
     const result = onSchedule?.(proposedEvent);
 
-    if (!result || !result.scheduled) {
-      if (result && !result.scheduled) {
-        const currentEvents = getCalendarEvents();
+    if (!result) {
+      return;
+    }
 
-        setProposedEvent(null);
-        setConflictEvent(result.conflict);
-        setAlternatives(suggestAlternativeTimes(proposedEvent, currentEvents));
-        setScheduled(false);
-      }
+    if (!result.scheduled) {
+      const currentEvents = getCalendarEvents();
 
+      setProposedEvent(null);
+      setConflictEvent(result.conflict);
+      setAlternatives(
+        result.conflict.id === proposedEvent.id
+          ? []
+          : suggestAlternativeTimes(proposedEvent, currentEvents),
+      );
+      setScheduled(false);
       return;
     }
 
