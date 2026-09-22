@@ -20,12 +20,77 @@ type EventComposerProps = {
   onSchedule?: (event: CalendarEvent) => void;
 };
 
+function parseTime(text: string): { hour: number; minute: number } | null {
+  const timeMatch = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*(AM|PM)\b/i);
+
+  if (!timeMatch) {
+    return null;
+  }
+
+  let hour = Number(timeMatch[1]);
+  const minute = Number(timeMatch[2] ?? "0");
+  const period = timeMatch[3].toUpperCase();
+
+  if (hour < 1 || hour > 12 || minute > 59) {
+    return null;
+  }
+
+  if (period === "AM" && hour === 12) {
+    hour = 0;
+  }
+
+  if (period === "PM" && hour !== 12) {
+    hour += 12;
+  }
+
+  return { hour, minute };
+}
+
+function getTomorrowDate(): Date {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
+  return tomorrow;
+}
+
+function createIsoWithIndiaOffset(
+  date: Date,
+  hour: number,
+  minute: number,
+): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(hour).padStart(2, "0");
+  const minutes = String(minute).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:00+05:30`;
+}
+
+function formatEventDate(date: Date): string {
+  return date.toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function formatEventTime(hour: number, minute: number): string {
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+
+  return `${displayHour}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
 export function EventComposer({
   colors,
   onEventIntent,
   onSchedule,
 }: EventComposerProps) {
   const [text, setText] = useState("");
+  const [pendingRequest, setPendingRequest] = useState<string | null>(null);
+  const [clarification, setClarification] = useState<string | null>(null);
   const [proposedEvent, setProposedEvent] =
     useState<ScheduleEventIntent | null>(null);
   const [scheduled, setScheduled] = useState(false);
@@ -33,23 +98,79 @@ export function EventComposer({
   const handleSubmit = () => {
     if (!text.trim()) return;
 
+    const currentText = text.trim();
+
+    // If we previously asked for missing information,
+    // combine the original request with the new answer.
+    const fullRequest = pendingRequest
+      ? `${pendingRequest} ${currentText}`
+      : currentText;
+
+    const time = parseTime(fullRequest);
+
+    // Missing time information.
+    if (!time) {
+      setPendingRequest(fullRequest);
+      setClarification("What time should I schedule it?");
+      setProposedEvent(null);
+      setScheduled(false);
+      setText("");
+      return;
+    }
+
+    const tomorrow = getTomorrowDate();
+
+    const startAt = createIsoWithIndiaOffset(tomorrow, time.hour, time.minute);
+
+    const endHour = time.hour + 1;
+
+    const endDate = new Date(tomorrow);
+
+    if (endHour >= 24) {
+      endDate.setDate(endDate.getDate() + 1);
+    }
+
+    const endAt = createIsoWithIndiaOffset(endDate, endHour % 24, time.minute);
+
+    // Mock parser.
+    const participantMatch = fullRequest.match(
+      /with\s+([A-Za-z]+(?:\s+[A-Za-z]+)*)/i,
+    );
+
+    const participant = participantMatch?.[1]?.trim();
+
+    const locationMatch = fullRequest.match(
+      /\bat\s+(?:the\s+)?(office|home|cafe|school)\b/i,
+    );
+
+    const location = locationMatch?.[1]
+      ? locationMatch[1].charAt(0).toUpperCase() + locationMatch[1].slice(1)
+      : undefined;
+
     const event: ScheduleEventIntent = {
-      title: "Meeting with Rahul",
-      startAt: "2026-09-23T20:00:00+05:30",
-      endAt: "2026-09-23T21:00:00+05:30",
+      title: participant ? `Meeting with ${participant}` : "Meeting",
+      startAt,
+      endAt,
       timezone: "Asia/Kolkata",
-      location: "Office",
-      participant: "Rahul",
+      location,
+      participant,
     };
 
+    setPendingRequest(null);
+    setClarification(null);
     setScheduled(false);
     setProposedEvent(event);
+    setText("");
+
     onEventIntent?.(event);
   };
 
   const handleCancel = () => {
+    setPendingRequest(null);
+    setClarification(null);
     setProposedEvent(null);
     setScheduled(false);
+    setText("");
   };
 
   const handleSchedule = () => {
@@ -70,7 +191,13 @@ export function EventComposer({
 
     setScheduled(true);
     setProposedEvent(null);
+    setPendingRequest(null);
+    setClarification(null);
   };
+
+  const eventStart = proposedEvent ? new Date(proposedEvent.startAt) : null;
+
+  const eventEnd = proposedEvent ? new Date(proposedEvent.endAt) : null;
 
   return (
     <View style={styles.container}>
@@ -81,7 +208,7 @@ export function EventComposer({
       <TextInput
         value={text}
         onChangeText={setText}
-        placeholder="e.g. Schedule a meeting with Rahul tomorrow at 8 PM at the office"
+        placeholder="e.g. Schedule a meeting with Rahul tomorrow at 8 PM"
         placeholderTextColor={colors.textSecondary}
         multiline
         style={[
@@ -103,7 +230,23 @@ export function EventComposer({
         </Text>
       </TouchableOpacity>
 
-      {proposedEvent && (
+      {clarification && (
+        <View
+          style={[
+            styles.clarificationCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.clarificationText, { color: colors.text }]}>
+            {clarification}
+          </Text>
+        </View>
+      )}
+
+      {proposedEvent && eventStart && eventEnd && (
         <View
           style={[
             styles.eventCard,
@@ -118,11 +261,12 @@ export function EventComposer({
           </Text>
 
           <Text style={[styles.eventDate, { color: colors.textSecondary }]}>
-            Tomorrow
+            {formatEventDate(eventStart)}
           </Text>
 
           <Text style={[styles.eventTime, { color: colors.text }]}>
-            8:00 PM – 9:00 PM
+            {formatEventTime(eventStart.getHours(), eventStart.getMinutes())} –{" "}
+            {formatEventTime(eventEnd.getHours(), eventEnd.getMinutes())}
           </Text>
 
           {proposedEvent.location && (
@@ -201,6 +345,18 @@ const styles = StyleSheet.create({
   },
 
   submitText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  clarificationCard: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+  },
+
+  clarificationText: {
     fontSize: 14,
     fontWeight: "600",
   },
