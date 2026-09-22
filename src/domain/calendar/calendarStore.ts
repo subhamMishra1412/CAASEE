@@ -13,7 +13,7 @@ export function getCalendarEvents(): CalendarEvent[] {
 }
 
 export function addCalendarEvent(event: CalendarEvent): void {
-  calendarEvents = [...calendarEvents, event];
+  calendarEvents = [...calendarEvents, even
   listeners.forEach((listener) => listener());
 }
 
