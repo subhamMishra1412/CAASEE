@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { getCalendarEvents } from "@/domain/calendar/calendarStore";
 import { parseEventInput } from "@/domain/calendar/eventComposer";
+import { checkAvailability } from "@/domain/calendar/scheduling/checkAvailability";
 import { createScheduleProposal } from "@/domain/calendar/scheduling/scheduleEvent";
 import type { CalendarEvent } from "@/domain/calendar/types";
 
@@ -37,6 +39,9 @@ export default function EventComposer({
   const [proposedEvent, setProposedEvent] = useState<CalendarEvent | null>(
     null,
   );
+  const [conflictEvent, setConflictEvent] = useState<CalendarEvent | null>(
+    null,
+  );
   const [scheduled, setScheduled] = useState(false);
 
   const handleSubmit = () => {
@@ -57,12 +62,24 @@ export default function EventComposer({
       setPendingRequest(fullRequest);
       setClarification(result.message);
       setProposedEvent(null);
+      setConflictEvent(null);
       setScheduled(false);
       setText("");
       return;
     }
 
     const event = result.event;
+    const availability = checkAvailability(event, getCalendarEvents());
+
+    if (!availability.available) {
+      setPendingRequest(null);
+      setClarification(null);
+      setProposedEvent(null);
+      setConflictEvent(availability.conflict);
+      setScheduled(false);
+      setText("");
+      return;
+    }
 
     onEventIntent?.({
       title: event.title,
@@ -75,6 +92,7 @@ export default function EventComposer({
     });
 
     setProposedEvent(event);
+    setConflictEvent(null);
     setPendingRequest(null);
     setClarification(null);
     setText("");
@@ -94,6 +112,7 @@ export default function EventComposer({
 
   const handleCancel = () => {
     setProposedEvent(null);
+    setConflictEvent(null);
     setPendingRequest(null);
     setClarification(null);
     setScheduled(false);
@@ -142,6 +161,58 @@ export default function EventComposer({
         </View>
       ) : null}
 
+      {conflictEvent ? (
+        <View
+          style={[
+            styles.conflictCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.conflictTitle, { color: colors.text }]}>
+            Time conflict
+          </Text>
+
+          <Text style={[styles.conflictMessage, { color: colors.text }]}>
+            That time is already occupied.
+          </Text>
+
+          <Text style={[styles.eventTitle, { color: colors.text }]}>
+            {conflictEvent.title}
+          </Text>
+
+          <Text style={[styles.eventDetail, { color: colors.mutedText }]}>
+            {new Date(conflictEvent.startAt).toLocaleString()} –{" "}
+            {new Date(conflictEvent.endAt).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+          </Text>
+
+          {conflictEvent.location ? (
+            <Text style={[styles.eventDetail, { color: colors.mutedText }]}>
+              {conflictEvent.location}
+            </Text>
+          ) : null}
+
+          <Pressable
+            onPress={handleCancel}
+            style={[
+              styles.secondaryButton,
+              {
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.secondaryText, { color: colors.text }]}>
+              Try another time
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       <Pressable
         onPress={handleSubmit}
         style={[
@@ -166,6 +237,10 @@ export default function EventComposer({
         >
           <Text style={[styles.proposalTitle, { color: colors.text }]}>
             Confirm event
+          </Text>
+
+          <Text style={[styles.availableText, { color: colors.primary }]}>
+            Time is available
           </Text>
 
           <Text style={[styles.eventTitle, { color: colors.text }]}>
@@ -255,6 +330,40 @@ const styles = StyleSheet.create({
   clarificationText: {
     fontSize: 14,
   },
+  conflictCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+  },
+  conflictTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  conflictMessage: {
+    fontSize: 14,
+  },
+  proposalCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+  },
+  proposalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  availableText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  eventTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  eventDetail: {
+    fontSize: 14,
+  },
   primaryButton: {
     minHeight: 46,
     borderRadius: 12,
@@ -267,35 +376,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
-  proposalCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-  },
-  proposalTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  eventTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  eventDetail: {
-    fontSize: 14,
-  },
   actions: {
     flexDirection: "row",
     gap: 10,
     marginTop: 8,
   },
   secondaryButton: {
-    flex: 1,
     minHeight: 46,
     borderWidth: 1,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 18,
   },
   secondaryText: {
     fontSize: 15,
