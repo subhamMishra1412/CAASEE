@@ -5,6 +5,7 @@ import { getCalendarEvents } from "@/domain/calendar/calendarStore";
 import { parseEventInput } from "@/domain/calendar/eventComposer";
 import { checkAvailability } from "@/domain/calendar/scheduling/checkAvailability";
 import { createScheduleProposal } from "@/domain/calendar/scheduling/scheduleEvent";
+import { suggestAlternativeTimes } from "@/domain/calendar/scheduling/suggestAlternatives";
 import type { CalendarEvent } from "@/domain/calendar/types";
 
 type EventComposerProps = {
@@ -42,6 +43,7 @@ export default function EventComposer({
   const [conflictEvent, setConflictEvent] = useState<CalendarEvent | null>(
     null,
   );
+  const [alternatives, setAlternatives] = useState<CalendarEvent[]>([]);
   const [scheduled, setScheduled] = useState(false);
 
   const handleSubmit = () => {
@@ -63,6 +65,7 @@ export default function EventComposer({
       setClarification(result.message);
       setProposedEvent(null);
       setConflictEvent(null);
+      setAlternatives([]);
       setScheduled(false);
       setText("");
       return;
@@ -72,10 +75,16 @@ export default function EventComposer({
     const availability = checkAvailability(event, getCalendarEvents());
 
     if (!availability.available) {
+      const suggestedAlternatives = suggestAlternativeTimes(
+        event,
+        getCalendarEvents(),
+      );
+
       setPendingRequest(null);
       setClarification(null);
       setProposedEvent(null);
       setConflictEvent(availability.conflict);
+      setAlternatives(suggestedAlternatives);
       setScheduled(false);
       setText("");
       return;
@@ -92,10 +101,18 @@ export default function EventComposer({
     });
 
     setProposedEvent(event);
-    setConflictEvent(null);
     setPendingRequest(null);
     setClarification(null);
+    setConflictEvent(null);
+    setAlternatives([]);
     setText("");
+    setScheduled(false);
+  };
+
+  const handleSelectAlternative = (event: CalendarEvent) => {
+    setProposedEvent(event);
+    setConflictEvent(null);
+    setAlternatives([]);
     setScheduled(false);
   };
 
@@ -112,9 +129,10 @@ export default function EventComposer({
 
   const handleCancel = () => {
     setProposedEvent(null);
-    setConflictEvent(null);
     setPendingRequest(null);
     setClarification(null);
+    setConflictEvent(null);
+    setAlternatives([]);
     setScheduled(false);
   };
 
@@ -161,6 +179,18 @@ export default function EventComposer({
         </View>
       ) : null}
 
+      <Pressable
+        onPress={handleSubmit}
+        style={[
+          styles.primaryButton,
+          {
+            backgroundColor: colors.primary,
+          },
+        ]}
+      >
+        <Text style={styles.primaryButtonText}>Create Event</Text>
+      </Pressable>
+
       {conflictEvent ? (
         <View
           style={[
@@ -175,7 +205,7 @@ export default function EventComposer({
             Time conflict
           </Text>
 
-          <Text style={[styles.conflictMessage, { color: colors.text }]}>
+          <Text style={[styles.conflictMessage, { color: colors.mutedText }]}>
             That time is already occupied.
           </Text>
 
@@ -185,10 +215,7 @@ export default function EventComposer({
 
           <Text style={[styles.eventDetail, { color: colors.mutedText }]}>
             {new Date(conflictEvent.startAt).toLocaleString()} –{" "}
-            {new Date(conflictEvent.endAt).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-            })}
+            {new Date(conflictEvent.endAt).toLocaleTimeString()}
           </Text>
 
           {conflictEvent.location ? (
@@ -196,6 +223,43 @@ export default function EventComposer({
               {conflictEvent.location}
             </Text>
           ) : null}
+
+          {alternatives.length > 0 ? (
+            <View style={styles.alternatives}>
+              <Text style={[styles.alternativesTitle, { color: colors.text }]}>
+                Available alternatives
+              </Text>
+
+              {alternatives.map((alternative) => (
+                <Pressable
+                  key={alternative.id}
+                  onPress={() => handleSelectAlternative(alternative)}
+                  style={[
+                    styles.alternativeButton,
+                    {
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.alternativeText, { color: colors.text }]}
+                  >
+                    {new Date(alternative.startAt).toLocaleTimeString(
+                      undefined,
+                      {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      },
+                    )}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : (
+            <Text style={[styles.conflictMessage, { color: colors.mutedText }]}>
+              I couldn't find another available time in the suggested window.
+            </Text>
+          )}
 
           <Pressable
             onPress={handleCancel}
@@ -207,23 +271,11 @@ export default function EventComposer({
             ]}
           >
             <Text style={[styles.secondaryText, { color: colors.text }]}>
-              Try another time
+              Cancel
             </Text>
           </Pressable>
         </View>
       ) : null}
-
-      <Pressable
-        onPress={handleSubmit}
-        style={[
-          styles.primaryButton,
-          {
-            backgroundColor: colors.primary,
-          },
-        ]}
-      >
-        <Text style={styles.primaryButtonText}>Create Event</Text>
-      </Pressable>
 
       {proposedEvent ? (
         <View
@@ -236,7 +288,7 @@ export default function EventComposer({
           ]}
         >
           <Text style={[styles.proposalTitle, { color: colors.text }]}>
-            Confirm event
+            {scheduled ? "Scheduled event" : "Confirm event"}
           </Text>
 
           <Text style={[styles.availableText, { color: colors.primary }]}>
@@ -278,17 +330,19 @@ export default function EventComposer({
               </Text>
             </Pressable>
 
-            <Pressable
-              onPress={handleSchedule}
-              style={[
-                styles.primaryButton,
-                {
-                  backgroundColor: colors.primary,
-                },
-              ]}
-            >
-              <Text style={styles.primaryButtonText}>Schedule</Text>
-            </Pressable>
+            {!scheduled ? (
+              <Pressable
+                onPress={handleSchedule}
+                style={[
+                  styles.primaryButton,
+                  {
+                    backgroundColor: colors.primary,
+                  },
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>Schedule</Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
       ) : null}
@@ -330,6 +384,18 @@ const styles = StyleSheet.create({
   clarificationText: {
     fontSize: 14,
   },
+  primaryButton: {
+    minHeight: 46,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
+  primaryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+  },
   conflictCard: {
     borderWidth: 1,
     borderRadius: 16,
@@ -342,6 +408,25 @@ const styles = StyleSheet.create({
   },
   conflictMessage: {
     fontSize: 14,
+  },
+  alternatives: {
+    gap: 8,
+    marginTop: 8,
+  },
+  alternativesTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  alternativeButton: {
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: 10,
+    justifyContent: "center",
+    paddingHorizontal: 14,
+  },
+  alternativeText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   proposalCard: {
     borderWidth: 1,
@@ -363,18 +448,6 @@ const styles = StyleSheet.create({
   },
   eventDetail: {
     fontSize: 14,
-  },
-  primaryButton: {
-    minHeight: 46,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 18,
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
   },
   actions: {
     flexDirection: "row",
