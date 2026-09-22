@@ -1,13 +1,8 @@
 import { useState } from "react";
-import {
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
-} from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { parseEventInput } from "@/domain/calendar/eventComposer";
+import { createScheduleProposal } from "@/domain/calendar/scheduling/scheduleEvent";
 import type { CalendarEvent } from "@/domain/calendar/types";
 
 type EventComposerProps = {
@@ -55,66 +50,31 @@ export default function EventComposer({
       ? `${pendingRequest} ${currentText}`
       : currentText;
 
-    const parsed = parseEventInput(fullRequest);
+    const draft = parseEventInput(fullRequest);
+    const result = createScheduleProposal(draft);
 
-    if (!parsed.date) {
+    if (result.type === "clarification") {
       setPendingRequest(fullRequest);
-      setClarification("What day should I schedule it?");
+      setClarification(result.message);
+      setProposedEvent(null);
+      setScheduled(false);
       setText("");
       return;
     }
 
-    if (!parsed.time) {
-      setPendingRequest(fullRequest);
-      setClarification("What time should I schedule it?");
-      setText("");
-      return;
-    }
-
-    const [timePart, period] = parsed.time.split(" ");
-    const [hourString, minuteString] = timePart.split(":");
-
-    let hour = Number(hourString);
-    const minute = Number(minuteString);
-
-    if (period === "AM" && hour === 12) {
-      hour = 0;
-    }
-
-    if (period === "PM" && hour !== 12) {
-      hour += 12;
-    }
-
-    const start = new Date(parsed.date);
-    start.setHours(hour, minute, 0, 0);
-
-    const end = new Date(start);
-    end.setMinutes(end.getMinutes() + 60);
-
-    const calendarEvent: CalendarEvent = {
-      id: `local-${Date.now()}`,
-      title: parsed.title,
-      startAt: start.toISOString(),
-      endAt: end.toISOString(),
-      timezone: "Asia/Kolkata",
-      location: parsed.location,
-      description: parsed.attendee
-        ? `Meeting with ${parsed.attendee}`
-        : undefined,
-      source: "ai",
-    };
+    const event = result.event;
 
     onEventIntent?.({
-      title: calendarEvent.title,
-      startAt: calendarEvent.startAt,
-      endAt: calendarEvent.endAt,
-      timezone: calendarEvent.timezone,
-      location: calendarEvent.location,
-      description: calendarEvent.description,
-      participant: parsed.attendee,
+      title: event.title,
+      startAt: event.startAt,
+      endAt: event.endAt,
+      timezone: event.timezone,
+      location: event.location,
+      description: event.description,
+      participant: draft.attendee,
     });
 
-    setProposedEvent(calendarEvent);
+    setProposedEvent(event);
     setPendingRequest(null);
     setClarification(null);
     setText("");
