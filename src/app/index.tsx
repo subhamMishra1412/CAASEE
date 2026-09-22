@@ -3,8 +3,10 @@ import { EventComposer } from "@/components/EventComposer";
 import { ScheduleSection } from "@/components/ScheduleSection";
 import { Colors } from "@/constants/theme";
 import { mockEvents } from "@/data/mockData";
+import type { CalendarEvent } from "@/domain/calendar/types";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -18,10 +20,14 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
+  const [events, setEvents] = useState<CalendarEvent[]>(mockEvents);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
+
     if (hour < 12) return "Good morning";
     if (hour < 18) return "Good afternoon";
+
     return "Good evening";
   };
 
@@ -37,8 +43,10 @@ export default function HomeScreen() {
           <Text style={[styles.greeting, { color: colors.textSecondary }]}>
             {getGreeting()}
           </Text>
+
           <Text style={[styles.name, { color: colors.text }]}>Subham</Text>
         </View>
+
         <TouchableOpacity
           style={[
             styles.settingsButton,
@@ -53,6 +61,7 @@ export default function HomeScreen() {
       {/* Branding */}
       <View style={styles.brandingContainer}>
         <Text style={[styles.branding, { color: colors.text }]}>CAASEE</Text>
+
         <Text style={[styles.brandingSubtext, { color: colors.textSecondary }]}>
           Intelligent scheduling assistant
         </Text>
@@ -61,11 +70,15 @@ export default function HomeScreen() {
       {/* AI Orb */}
       {/* TODO(Task 003): Connect the AI assistant conversation flow. */}
       <AIOrb size="large" colors={colors} disabled />
+
       {/* Event Composer */}
       <EventComposer
         colors={colors}
         onEventIntent={(event) => {
           console.log("Proposed event:", event);
+        }}
+        onSchedule={(event) => {
+          setEvents((currentEvents) => [...currentEvents, event]);
         }}
       />
 
@@ -77,25 +90,34 @@ export default function HomeScreen() {
         ]}
       >
         <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: colors.text }]}>3</Text>
+          <Text style={[styles.statNumber, { color: colors.text }]}>
+            {events.length}
+          </Text>
+
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-            Today
+            Events
           </Text>
         </View>
+
         <View
           style={[styles.statDivider, { backgroundColor: colors.border }]}
         />
+
         <View style={styles.statBox}>
           <Text style={[styles.statNumber, { color: colors.text }]}>12</Text>
+
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
             This week
           </Text>
         </View>
+
         <View
           style={[styles.statDivider, { backgroundColor: colors.border }]}
         />
+
         <View style={styles.statBox}>
           <Text style={[styles.statNumber, { color: colors.text }]}>2</Text>
+
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
             Pending
           </Text>
@@ -104,7 +126,7 @@ export default function HomeScreen() {
 
       {/* Today's Schedule */}
       <ScheduleSection
-        events={mockEvents}
+        events={events}
         colors={colors}
         onViewAll={() => router.push("/calendar")}
       />
@@ -117,10 +139,12 @@ export default function HomeScreen() {
         ]}
       >
         <Text style={styles.insightIcon}>💡</Text>
+
         <View style={styles.insightContent}>
           <Text style={[styles.insightTitle, { color: colors.text }]}>
             Smart suggestion
           </Text>
+
           <Text style={[styles.insightText, { color: colors.textSecondary }]}>
             Block 4-5 PM for focused work based on your patterns
           </Text>
@@ -134,27 +158,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 40,
   },
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 24,
   },
+
   greeting: {
     fontSize: 13,
     fontWeight: "500",
     letterSpacing: 0.5,
   },
+
   name: {
     fontSize: 28,
     fontWeight: "700",
     marginTop: 2,
   },
+
   settingsButton: {
     width: 40,
     height: 40,
@@ -162,23 +191,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   settingsIcon: {
     fontSize: 18,
   },
+
   brandingContainer: {
     alignItems: "center",
     marginBottom: 32,
   },
+
   branding: {
     fontSize: 32,
     fontWeight: "700",
     letterSpacing: 1.5,
   },
+
   brandingSubtext: {
     fontSize: 12,
     marginTop: 4,
     letterSpacing: 0.3,
   },
+
   statsContainer: {
     flexDirection: "row",
     borderRadius: 12,
@@ -187,23 +221,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
   },
+
   statBox: {
     alignItems: "center",
     flex: 1,
   },
+
   statNumber: {
     fontSize: 20,
     fontWeight: "700",
   },
+
   statLabel: {
     fontSize: 11,
     marginTop: 4,
     fontWeight: "500",
   },
+
   statDivider: {
     width: 1,
     height: 30,
   },
+
   insightCard: {
     borderRadius: 12,
     padding: 14,
@@ -214,18 +253,22 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: "#0ea5e9",
   },
+
   insightIcon: {
     fontSize: 20,
     marginTop: 2,
   },
+
   insightContent: {
     flex: 1,
   },
+
   insightTitle: {
     fontSize: 13,
     fontWeight: "600",
     marginBottom: 3,
   },
+
   insightText: {
     fontSize: 12,
     lineHeight: 16,

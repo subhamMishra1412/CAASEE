@@ -1,4 +1,5 @@
 import type { ScheduleEventIntent } from "@/domain/calendar/scheduleEventIntent";
+import type { CalendarEvent } from "@/domain/calendar/types";
 import { useState } from "react";
 import {
     StyleSheet,
@@ -16,18 +17,22 @@ type EventComposerProps = {
     border: string;
   };
   onEventIntent?: (event: ScheduleEventIntent) => void;
+  onSchedule?: (event: CalendarEvent) => void;
 };
 
-export function EventComposer({ colors, onEventIntent }: EventComposerProps) {
+export function EventComposer({
+  colors,
+  onEventIntent,
+  onSchedule,
+}: EventComposerProps) {
   const [text, setText] = useState("");
   const [proposedEvent, setProposedEvent] =
     useState<ScheduleEventIntent | null>(null);
+  const [scheduled, setScheduled] = useState(false);
 
   const handleSubmit = () => {
     if (!text.trim()) return;
 
-    // Temporary frontend representation.
-    // AI parsing will replace this later.
     const event: ScheduleEventIntent = {
       title: "Meeting with Rahul",
       startAt: "2026-09-23T20:00:00+05:30",
@@ -37,11 +42,33 @@ export function EventComposer({ colors, onEventIntent }: EventComposerProps) {
       participant: "Rahul",
     };
 
+    setScheduled(false);
     setProposedEvent(event);
     onEventIntent?.(event);
   };
 
   const handleCancel = () => {
+    setProposedEvent(null);
+    setScheduled(false);
+  };
+
+  const handleSchedule = () => {
+    if (!proposedEvent) return;
+
+    const calendarEvent: CalendarEvent = {
+      id: `local-${Date.now()}`,
+      title: proposedEvent.title,
+      startAt: proposedEvent.startAt,
+      endAt: proposedEvent.endAt,
+      timezone: proposedEvent.timezone,
+      location: proposedEvent.location,
+      description: proposedEvent.description,
+      source: "ai",
+    };
+
+    onSchedule?.(calendarEvent);
+
+    setScheduled(true);
     setProposedEvent(null);
   };
 
@@ -118,10 +145,7 @@ export function EventComposer({ colors, onEventIntent }: EventComposerProps) {
 
             <TouchableOpacity
               style={[styles.scheduleButton, { backgroundColor: colors.text }]}
-              onPress={() => {
-                // Intentionally empty.
-                // Calendar creation will be implemented later.
-              }}
+              onPress={handleSchedule}
             >
               <Text
                 style={[styles.scheduleText, { color: colors.cardBackground }]}
@@ -130,6 +154,19 @@ export function EventComposer({ colors, onEventIntent }: EventComposerProps) {
               </Text>
             </TouchableOpacity>
           </View>
+        </View>
+      )}
+
+      {scheduled && (
+        <View
+          style={[
+            styles.successCard,
+            { backgroundColor: colors.cardBackground },
+          ]}
+        >
+          <Text style={[styles.successText, { color: colors.text }]}>
+            Scheduled successfully.
+          </Text>
         </View>
       )}
     </View>
@@ -224,6 +261,17 @@ const styles = StyleSheet.create({
 
   scheduleText: {
     fontSize: 14,
+    fontWeight: "600",
+  },
+
+  successCard: {
+    marginTop: 16,
+    borderRadius: 12,
+    padding: 16,
+  },
+
+  successText: {
+    fontSize: 15,
     fontWeight: "600",
   },
 });
