@@ -7,6 +7,10 @@ import {
   getCalendarDaySummaries,
   useCalendarEvents,
 } from "@/domain/calendar/calendarStore";
+import {
+  formatEventTime,
+  getEventCalendarDate,
+} from "@/domain/calendar/dateUtils";
 
 export default function CalendarScreen() {
   const colors = Colors.light;
@@ -28,7 +32,7 @@ export default function CalendarScreen() {
   ].join("-");
 
   const selectedEvents = calendarEvents.filter(
-    (event) => event.startAt.slice(0, 10) === selectedDateKey,
+    (event) => getEventCalendarDate(event) === selectedDateKey,
   );
 
   return (
@@ -72,15 +76,8 @@ export default function CalendarScreen() {
               </Text>
 
               <Text style={[styles.eventTime, { color: colors.mutedText }]}>
-                {new Date(event.startAt).toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}{" "}
-                –{" "}
-                {new Date(event.endAt).toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
+                {formatEventTime(event.startAt, event.timezone)} –{" "}
+                {formatEventTime(event.endAt, event.timezone)}
               </Text>
 
               {event.location ? (
