@@ -307,10 +307,11 @@ export default function EventComposer({
       <Text style={[styles.heading, { color: colors.text }]}>
         Schedule with AI{" "}
       </Text>
-      ```
+
       <Text style={[styles.subtitle, { color: colors.mutedText }]}>
         Tell me what you want to schedule or reschedule.
       </Text>
+
       <TextInput
         value={text}
         onChangeText={setText}
@@ -327,6 +328,7 @@ export default function EventComposer({
         multiline
         onSubmitEditing={handleSubmit}
       />
+
       {clarification ? (
         <View
           style={[
@@ -342,6 +344,7 @@ export default function EventComposer({
           </Text>
         </View>
       ) : null}
+
       {rescheduleMessage ? (
         <View
           style={[
@@ -357,6 +360,7 @@ export default function EventComposer({
           </Text>
         </View>
       ) : null}
+
       <Pressable
         onPress={handleSubmit}
         style={[
@@ -366,8 +370,11 @@ export default function EventComposer({
           },
         ]}
       >
-        <Text style={styles.primaryButtonText}>Create Event</Text>
+        <Text style={styles.primaryButtonText}>
+          {rescheduling ? "Reschedule" : "Create Event"}
+        </Text>
       </Pressable>
+
       {conflictEvent ? (
         <View
           style={[
@@ -457,6 +464,7 @@ export default function EventComposer({
           </Pressable>
         </View>
       ) : null}
+
       {proposedEvent ? (
         <View
           style={[
@@ -544,6 +552,7 @@ export default function EventComposer({
           </View>
         </View>
       ) : null}
+
       {scheduled ? (
         <Text style={[styles.success, { color: colors.primary }]}>
           Scheduled successfully.

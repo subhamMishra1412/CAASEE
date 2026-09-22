@@ -43,7 +43,6 @@ export function ScheduleSection({
         <Text style={[styles.title, { color: colors.text }]}>
           Today's Schedule{" "}
         </Text>
-        ```
         <TouchableOpacity onPress={onViewAll}>
           <Text style={[styles.viewAll, { color: colors.textSecondary }]}>
             View All →

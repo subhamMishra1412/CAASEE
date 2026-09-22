@@ -1,5 +1,4 @@
 import { mockEvents } from "@/data/mockData";
-import { getEventCalendarDate } from "@/domain/calendar/dateUtils";
 import { checkAvailability } from "@/domain/calendar/scheduling/checkAvailability";
 import type {
   CalendarDaySummary,
@@ -9,6 +8,10 @@ import { useEffect, useState } from "react";
 
 let calendarEvents: CalendarEvent[] = [...mockEvents];
 const listeners = new Set<() => void>();
+
+function notifyListeners(): void {
+  listeners.forEach((listener) => listener());
+}
 
 export function getCalendarEvents(): CalendarEvent[] {
   return calendarEvents;
@@ -24,7 +27,7 @@ export function addCalendarEvent(event: CalendarEvent): void {
   }
 
   calendarEvents = [...calendarEvents, event];
-  listeners.forEach((listener) => listener());
+  notifyListeners();
 }
 
 export type CalendarScheduleResult =
@@ -79,6 +82,100 @@ export function scheduleCalendarEvent(
   };
 }
 
+export type CalendarRescheduleResult =
+  | {
+      rescheduled: true;
+      event: CalendarEvent;
+    }
+  | {
+      rescheduled: false;
+      conflict: CalendarEvent;
+    };
+
+export function rescheduleCalendarEvent(
+  existingEventId: string,
+  proposedEvent: CalendarEvent,
+): CalendarRescheduleResult {
+  /*
+   * Re-read the calendar at execution time.
+   *
+   * The proposal may have been created several seconds earlier,
+   * so availability must never rely only on the earlier UI check.
+   */
+  const currentEvents = getCalendarEvents();
+
+  const existingEvent = currentEvents.find(
+    (event) => event.id === existingEventId,
+  );
+
+  if (!existingEvent) {
+    return {
+      rescheduled: false,
+      conflict: proposedEvent,
+    };
+  }
+
+  /*
+   * The event being rescheduled must not conflict with itself.
+   */
+  const otherEvents = currentEvents.filter(
+    (event) => event.id !== existingEventId,
+  );
+
+  /*
+   * Final execution-time validation.
+   */
+  const availability = checkAvailability(proposedEvent, otherEvents);
+
+  if (!availability.available) {
+    return {
+      rescheduled: false,
+      conflict: availability.conflict,
+    };
+  }
+
+  /*
+   * Preserve the existing event's identity and metadata.
+   * Only the scheduled time changes.
+   */
+  const updatedEvent: CalendarEvent = {
+    ...existingEvent,
+    startAt: proposedEvent.startAt,
+    endAt: proposedEvent.endAt,
+  };
+
+  /*
+   * Replace the existing event instead of creating a new one.
+   */
+  calendarEvents = currentEvents.map((event) =>
+    event.id === existingEventId ? updatedEvent : event,
+  );
+
+  notifyListeners();
+
+  /*
+   * Verify that the replacement actually exists in calendar state.
+   */
+  const wasRescheduled = getCalendarEvents().some(
+    (event) =>
+      event.id === existingEventId &&
+      event.startAt === updatedEvent.startAt &&
+      event.endAt === updatedEvent.endAt,
+  );
+
+  if (!wasRescheduled) {
+    return {
+      rescheduled: false,
+      conflict: existingEvent,
+    };
+  }
+
+  return {
+    rescheduled: true,
+    event: updatedEvent,
+  };
+}
+
 export function subscribeCalendarEvents(listener: () => void): () => void {
   listeners.add(listener);
 
@@ -105,7 +202,7 @@ export function getCalendarDaySummaries(
   const counts = new Map<string, number>();
 
   events.forEach((event) => {
-    const date = getEventCalendarDate(event);
+    const date = event.startAt.slice(0, 10);
     counts.set(date, (counts.get(date) ?? 0) + 1);
   });
 
