@@ -66,48 +66,73 @@ export default function AuthScreen() {
       return;
     }
 
-    router.replace("/");
+    router.replace("/(tabs)");
   }
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+        },
+      ]}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        bounces={false}
       >
         <View style={styles.content}>
           {/* AI INTRO */}
           <View style={styles.hero}>
-            <View style={styles.orbOuter}>
-              <View style={styles.orbMiddle}>
-                <View style={styles.orbInner}>
-                  <Text style={styles.orbText}>✦</Text>
-                </View>
+            <View style={styles.orb}>
+              <View style={styles.orbCore}>
+                <Text style={styles.orbSymbol}>✦</Text>
               </View>
             </View>
 
-            <Text style={[styles.brand, { color: colors.text }]}>CAASee</Text>
+            <Text
+              style={[
+                styles.brand,
+                {
+                  color: colors.text,
+                },
+              ]}
+            >
+              CAASee
+            </Text>
 
-            <Text style={[styles.heroTitle, { color: colors.text }]}>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: colors.text,
+                },
+              ]}
+            >
               {isRegister
                 ? "Let’s make your schedule feel lighter."
                 : "Good to see you again."}
             </Text>
 
             <Text
-              style={[styles.heroSubtitle, { color: colors.textSecondary }]}
+              style={[
+                styles.subtitle,
+                {
+                  color: colors.textSecondary,
+                },
+              ]}
             >
               {isRegister
-                ? "I’ll help you plan your time, keep track of what matters, and make scheduling feel a little more human."
-                : "Your schedule is waiting. Sign in and let’s get things organized."}
+                ? "I’ll help you plan your time and keep the things that matter organized."
+                : "Your schedule is waiting. Let’s get things organized."}
             </Text>
           </View>
 
-          {/* FORM CARD */}
+          {/* FORM */}
           <View
             style={[
               styles.card,
@@ -117,23 +142,40 @@ export default function AuthScreen() {
               },
             ]}
           >
-            <View style={styles.cardHeader}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
-                {isRegister ? "Create your account" : "Welcome back"}
-              </Text>
+            <Text
+              style={[
+                styles.cardTitle,
+                {
+                  color: colors.text,
+                },
+              ]}
+            >
+              {isRegister ? "Create your account" : "Welcome back"}
+            </Text>
 
-              <Text
-                style={[styles.cardSubtitle, { color: colors.textSecondary }]}
-              >
-                {isRegister
-                  ? "It only takes a minute to get started."
-                  : "Enter your details to continue."}
-              </Text>
-            </View>
+            <Text
+              style={[
+                styles.cardSubtitle,
+                {
+                  color: colors.textSecondary,
+                },
+              ]}
+            >
+              {isRegister
+                ? "Let’s get you set up."
+                : "Enter your details to continue."}
+            </Text>
 
             {isRegister && (
               <View style={styles.field}>
-                <Text style={[styles.label, { color: colors.text }]}>
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      color: colors.text,
+                    },
+                  ]}
+                >
                   Your name
                 </Text>
 
@@ -147,7 +189,6 @@ export default function AuthScreen() {
                     {
                       color: colors.text,
                       borderColor: colors.border,
-                      backgroundColor: colors.background,
                     },
                   ]}
                   autoCapitalize="words"
@@ -158,7 +199,16 @@ export default function AuthScreen() {
             )}
 
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Email
+              </Text>
 
               <TextInput
                 value={email}
@@ -170,7 +220,6 @@ export default function AuthScreen() {
                   {
                     color: colors.text,
                     borderColor: colors.border,
-                    backgroundColor: colors.background,
                   },
                 ]}
                 keyboardType="email-address"
@@ -182,7 +231,14 @@ export default function AuthScreen() {
             </View>
 
             <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.text }]}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
                 Password
               </Text>
 
@@ -198,7 +254,6 @@ export default function AuthScreen() {
                   {
                     color: colors.text,
                     borderColor: colors.border,
-                    backgroundColor: colors.background,
                   },
                 ]}
                 secureTextEntry
@@ -211,7 +266,14 @@ export default function AuthScreen() {
 
             {isRegister && (
               <View style={styles.field}>
-                <Text style={[styles.label, { color: colors.text }]}>
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      color: colors.text,
+                    },
+                  ]}
+                >
                   Confirm password
                 </Text>
 
@@ -225,7 +287,6 @@ export default function AuthScreen() {
                     {
                       color: colors.text,
                       borderColor: colors.border,
-                      backgroundColor: colors.background,
                     },
                   ]}
                   secureTextEntry
@@ -247,7 +308,7 @@ export default function AuthScreen() {
               onPress={handleSubmit}
               disabled={loading}
               style={({ pressed }) => [
-                styles.primaryButton,
+                styles.button,
                 pressed && !loading && styles.buttonPressed,
                 loading && styles.buttonDisabled,
               ]}
@@ -256,26 +317,32 @@ export default function AuthScreen() {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <>
-                  <Text style={styles.primaryButtonText}>
+                  <Text style={styles.buttonText}>
                     {isRegister ? "Create my account" : "Sign me in"}
                   </Text>
 
-                  <Text style={styles.primaryButtonArrow}>→</Text>
+                  <Text style={styles.buttonArrow}>→</Text>
                 </>
               )}
             </Pressable>
           </View>
 
-          {/* MODE SWITCH */}
-          <View style={styles.switchContainer}>
-            <Text style={[styles.switchText, { color: colors.textSecondary }]}>
+          {/* SWITCH */}
+          <View style={styles.switchRow}>
+            <Text
+              style={[
+                styles.switchText,
+                {
+                  color: colors.textSecondary,
+                },
+              ]}
+            >
               {isRegister ? "Already have an account?" : "New to CAASee?"}
             </Text>
 
             <Pressable
               onPress={() => switchMode(isRegister ? "login" : "register")}
               disabled={loading}
-              hitSlop={8}
             >
               <Text style={styles.switchLink}>
                 {isRegister ? "Sign in" : "Create an account"}
@@ -283,7 +350,14 @@ export default function AuthScreen() {
             </Pressable>
           </View>
 
-          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+          <Text
+            style={[
+              styles.footer,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
             Your time. Your plans. One calmer place.
           </Text>
         </View>
@@ -299,9 +373,9 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 36,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 24,
   },
 
   content: {
@@ -312,187 +386,173 @@ const styles = StyleSheet.create({
 
   hero: {
     alignItems: "center",
-    marginBottom: 26,
+    marginBottom: 17,
   },
 
-  orbOuter: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    alignItems: "center",
-    justifyContent: "center",
+  orb: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: "#DBEAFE",
-    marginBottom: 14,
-  },
-
-  orbMiddle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#BFDBFE",
+    marginBottom: 8,
   },
 
-  orbInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
+  orbCore: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: "#2563EB",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  orbText: {
+  orbSymbol: {
     color: "#FFFFFF",
-    fontSize: 22,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "800",
   },
 
   brand: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "800",
     letterSpacing: 2,
     textTransform: "uppercase",
-    marginBottom: 9,
+    marginBottom: 5,
   },
 
-  heroTitle: {
-    fontSize: 27,
-    lineHeight: 34,
+  title: {
+    fontSize: 22,
+    lineHeight: 27,
     fontWeight: "800",
     textAlign: "center",
-    letterSpacing: -0.5,
-    marginBottom: 9,
+    letterSpacing: -0.3,
+    marginBottom: 5,
   },
 
-  heroSubtitle: {
-    maxWidth: 390,
-    fontSize: 14,
-    lineHeight: 21,
+  subtitle: {
+    maxWidth: 370,
+    fontSize: 12.5,
+    lineHeight: 17,
     textAlign: "center",
   },
 
   card: {
     borderWidth: 1,
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 20,
+    padding: 16,
     shadowColor: "#1D4ED8",
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
+    shadowOpacity: 0.07,
+    shadowRadius: 16,
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 6,
     },
-    elevation: 3,
-  },
-
-  cardHeader: {
-    marginBottom: 20,
+    elevation: 2,
   },
 
   cardTitle: {
-    fontSize: 21,
+    fontSize: 18,
     fontWeight: "800",
-    marginBottom: 5,
+    marginBottom: 3,
   },
 
   cardSubtitle: {
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 13,
   },
 
   field: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
 
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
-    marginBottom: 7,
+    marginBottom: 5,
   },
 
   input: {
-    minHeight: 52,
+    minHeight: 46,
     borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 15,
-    fontSize: 15,
+    borderRadius: 13,
+    paddingHorizontal: 13,
+    fontSize: 14,
   },
 
   errorBox: {
     backgroundColor: "#FEF2F2",
     borderWidth: 1,
     borderColor: "#FECACA",
-    borderRadius: 12,
-    paddingHorizontal: 13,
-    paddingVertical: 11,
-    marginBottom: 15,
+    borderRadius: 11,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    marginBottom: 10,
   },
 
   errorText: {
     color: "#B91C1C",
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: "600",
   },
 
-  primaryButton: {
-    minHeight: 54,
-    borderRadius: 15,
+  button: {
+    minHeight: 48,
+    borderRadius: 13,
     backgroundColor: "#2563EB",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 9,
+    gap: 8,
     marginTop: 2,
   },
 
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "800",
-  },
-
-  primaryButtonArrow: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "400",
-    marginTop: -2,
-  },
-
   buttonPressed: {
-    opacity: 0.86,
+    opacity: 0.85,
     transform: [{ scale: 0.99 }],
   },
 
   buttonDisabled: {
-    opacity: 0.65,
+    opacity: 0.6,
   },
 
-  switchContainer: {
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  buttonArrow: {
+    color: "#FFFFFF",
+    fontSize: 19,
+  },
+
+  switchRow: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
-    gap: 5,
+    justifyContent: "center",
     flexWrap: "wrap",
+    gap: 5,
+    marginTop: 14,
   },
 
   switchText: {
-    fontSize: 13,
+    fontSize: 12,
   },
 
   switchLink: {
     color: "#2563EB",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
   },
 
-  footerText: {
+  footer: {
     textAlign: "center",
-    fontSize: 11,
-    marginTop: 25,
-    opacity: 0.75,
+    fontSize: 10,
+    marginTop: 12,
+    opacity: 0.7,
   },
 });
