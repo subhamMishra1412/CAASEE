@@ -1,15 +1,11 @@
 import { AIOrb } from "@/components/AIOrb";
-import EventComposer from "@/components/EventComposer";
 import { ScheduleSection } from "@/components/ScheduleSection";
 import { Colors } from "@/constants/theme";
-import {
-  scheduleCalendarEvent,
-  useCalendarEvents,
-} from "@/domain/calendar/calendarStore";
-import type { CalendarEvent } from "@/domain/calendar/types";
+import { useCalendarEvents } from "@/domain/calendar/calendarStore";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
 import {
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -39,7 +35,6 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={[styles.greeting, { color: colors.textSecondary }]}>
@@ -60,7 +55,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Branding */}
       <View style={styles.brandingContainer}>
         <Text style={[styles.branding, { color: colors.text }]}>CAASEE</Text>
 
@@ -69,22 +63,56 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      {/* AI Orb */}
-      {/* TODO(Task 003): Connect the AI assistant conversation flow. */}
-      <AIOrb size="large" colors={colors} disabled />
+      {/* Voice scheduling */}
+      <View style={styles.voiceSection}>
+        <AIOrb
+          size="large"
+          colors={colors}
+          onPress={() => router.push("/assistant")}
+        />
+      </View>
 
-      {/* Event Composer */}
-      <EventComposer
-        colors={colors}
-        onEventIntent={(event) => {
-          console.log("Proposed event:", event);
-        }}
-        onSchedule={(event: CalendarEvent) => {
-          return scheduleCalendarEvent(event);
-        }}
-      />
+      {/* Text scheduling */}
+      <Pressable
+        onPress={() => router.push("/schedule")}
+        style={[
+          styles.textScheduleCard,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.textScheduleIcon,
+            { backgroundColor: colors.background },
+          ]}
+        >
+          <Text style={[styles.textScheduleIconText, { color: colors.text }]}>
+            ✎
+          </Text>
+        </View>
 
-      {/* Quick Stats */}
+        <View style={styles.textScheduleContent}>
+          <Text style={[styles.textScheduleTitle, { color: colors.text }]}>
+            Schedule with text
+          </Text>
+
+          <Text
+            style={[
+              styles.textScheduleSubtitle,
+              { color: colors.textSecondary },
+            ]}
+          >
+            Type a request and CAASEE will schedule it
+          </Text>
+        </View>
+
+        <Text style={[styles.arrow, { color: colors.textSecondary }]}>›</Text>
+      </Pressable>
+
+      {/* Quick stats */}
       <View
         style={[
           styles.statsContainer,
@@ -126,14 +154,12 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Today's Schedule */}
       <ScheduleSection
         events={events}
         colors={colors}
         onViewAll={() => router.push("/calendar")}
       />
 
-      {/* AI Insight Card */}
       <View
         style={[
           styles.insightCard,
@@ -171,7 +197,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 22,
   },
 
   greeting: {
@@ -200,7 +226,7 @@ const styles = StyleSheet.create({
 
   brandingContainer: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 16,
   },
 
   branding: {
@@ -215,11 +241,59 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
+  voiceSection: {
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
+  textScheduleCard: {
+    minHeight: 72,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+
+  textScheduleIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  textScheduleIconText: {
+    fontSize: 22,
+    fontWeight: "600",
+  },
+
+  textScheduleContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+
+  textScheduleTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  textScheduleSubtitle: {
+    fontSize: 12,
+    marginTop: 3,
+  },
+
+  arrow: {
+    fontSize: 28,
+    marginLeft: 8,
+  },
+
   statsContainer: {
     flexDirection: "row",
     borderRadius: 12,
     paddingVertical: 16,
-    marginVertical: 24,
     justifyContent: "space-around",
     alignItems: "center",
   },

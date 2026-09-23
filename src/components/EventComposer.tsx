@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import {
   getCalendarEvents,
@@ -71,7 +79,7 @@ export default function EventComposer({
     null,
   );
 
-  const resetFlow = () => {
+  const resetFlow = useCallback(() => {
     setProposedEvent(null);
     setPendingRequest(null);
     setClarification(null);
@@ -81,6 +89,41 @@ export default function EventComposer({
     setRescheduleTarget(null);
     setRescheduling(false);
     setRescheduleMessage(null);
+    setText("");
+  }, []);
+
+  /*
+   * Leaving the scheduling screen clears all transient state.
+   *
+   * This prevents a previous "Scheduled successfully" message
+   * from appearing when the user comes back later.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        resetFlow();
+      };
+    }, [resetFlow]),
+  );
+
+  const confirmCancel = () => {
+    Alert.alert(
+      rescheduling ? "Cancel reschedule?" : "Cancel scheduling?",
+      rescheduling
+        ? "No changes have been made to your existing event yet."
+        : "Your current scheduling request will be discarded.",
+      [
+        {
+          text: "Keep editing",
+          style: "cancel",
+        },
+        {
+          text: "Cancel",
+          style: "destructive",
+          onPress: resetFlow,
+        },
+      ],
+    );
   };
 
   const handleSubmit = () => {
@@ -107,6 +150,7 @@ export default function EventComposer({
         setAlternatives([]);
         setRescheduleTarget(null);
         setRescheduleMessage(null);
+        setScheduled(false);
         setText("");
         return;
       }
@@ -182,6 +226,7 @@ export default function EventComposer({
     }
 
     const event = result.event;
+
     const availability = checkAvailability(event, getCalendarEvents());
 
     if (!availability.available) {
@@ -269,8 +314,18 @@ export default function EventComposer({
       return;
     }
 
+    /*
+     * Show the success message exactly once for this successful action.
+     */
     setScheduled(true);
     setProposedEvent(null);
+    setPendingRequest(null);
+    setClarification(null);
+    setConflictEvent(null);
+    setAlternatives([]);
+    setRescheduleTarget(null);
+    setRescheduling(false);
+    setRescheduleMessage(null);
   };
 
   const handleReschedule = () => {
@@ -291,27 +346,26 @@ export default function EventComposer({
       return;
     }
 
+    /*
+     * Reuse the same one-time success state for rescheduling.
+     */
     setRescheduleMessage(
       `"${result.event.title}" was rescheduled successfully.`,
     );
+
     setProposedEvent(null);
     setConflictEvent(null);
     setAlternatives([]);
     setRescheduleTarget(null);
     setRescheduling(false);
     setScheduled(false);
+    setPendingRequest(null);
+    setClarification(null);
+    setText("");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.heading, { color: colors.text }]}>
-        Schedule with AI{" "}
-      </Text>
-
-      <Text style={[styles.subtitle, { color: colors.mutedText }]}>
-        Tell me what you want to schedule or reschedule.
-      </Text>
-
       <TextInput
         value={text}
         onChangeText={setText}
@@ -348,14 +402,18 @@ export default function EventComposer({
       {rescheduleMessage ? (
         <View
           style={[
-            styles.clarification,
+            styles.successCard,
             {
               backgroundColor: colors.card,
               borderColor: colors.border,
             },
           ]}
         >
-          <Text style={[styles.clarificationText, { color: colors.text }]}>
+          <Text style={[styles.successTitle, { color: colors.text }]}>
+            Reschedule complete
+          </Text>
+
+          <Text style={[styles.successText, { color: colors.mutedText }]}>
             {rescheduleMessage}
           </Text>
         </View>
@@ -366,11 +424,18 @@ export default function EventComposer({
         style={[
           styles.primaryButton,
           {
-            backgroundColor: colors.primary,
+            backgroundColor: colors.text,
           },
         ]}
       >
-        <Text style={styles.primaryButtonText}>
+        <Text
+          style={[
+            styles.primaryButtonText,
+            {
+              color: colors.background,
+            },
+          ]}
+        >
           {rescheduling ? "Reschedule" : "Create Event"}
         </Text>
       </Pressable>
@@ -450,7 +515,7 @@ export default function EventComposer({
           )}
 
           <Pressable
-            onPress={resetFlow}
+            onPress={confirmCancel}
             style={[
               styles.secondaryButton,
               {
@@ -479,7 +544,7 @@ export default function EventComposer({
             {rescheduling ? "Confirm reschedule" : "Confirm event"}
           </Text>
 
-          <Text style={[styles.availableText, { color: colors.primary }]}>
+          <Text style={[styles.availableText, { color: colors.text }]}>
             Time is available
           </Text>
 
@@ -511,7 +576,7 @@ export default function EventComposer({
 
           <View style={styles.actions}>
             <Pressable
-              onPress={resetFlow}
+              onPress={confirmCancel}
               style={[
                 styles.secondaryButton,
                 {
@@ -530,11 +595,20 @@ export default function EventComposer({
                 style={[
                   styles.primaryButton,
                   {
-                    backgroundColor: colors.primary,
+                    backgroundColor: colors.text,
                   },
                 ]}
               >
-                <Text style={styles.primaryButtonText}>Reschedule</Text>
+                <Text
+                  style={[
+                    styles.primaryButtonText,
+                    {
+                      color: colors.background,
+                    },
+                  ]}
+                >
+                  Reschedule
+                </Text>
               </Pressable>
             ) : (
               <Pressable
@@ -542,11 +616,20 @@ export default function EventComposer({
                 style={[
                   styles.primaryButton,
                   {
-                    backgroundColor: colors.primary,
+                    backgroundColor: colors.text,
                   },
                 ]}
               >
-                <Text style={styles.primaryButtonText}>Schedule</Text>
+                <Text
+                  style={[
+                    styles.primaryButtonText,
+                    {
+                      color: colors.background,
+                    },
+                  ]}
+                >
+                  Schedule
+                </Text>
               </Pressable>
             )}
           </View>
@@ -554,9 +637,23 @@ export default function EventComposer({
       ) : null}
 
       {scheduled ? (
-        <Text style={[styles.success, { color: colors.primary }]}>
-          Scheduled successfully.
-        </Text>
+        <View
+          style={[
+            styles.successCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.successTitle, { color: colors.text }]}>
+            Scheduled successfully
+          </Text>
+
+          <Text style={[styles.successText, { color: colors.mutedText }]}>
+            Your event has been added to the calendar.
+          </Text>
+        </View>
       ) : null}
     </View>
   );
@@ -566,13 +663,7 @@ const styles = StyleSheet.create({
   container: {
     gap: 12,
   },
-  heading: {
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  subtitle: {
-    fontSize: 14,
-  },
+
   input: {
     minHeight: 90,
     borderWidth: 1,
@@ -582,14 +673,17 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     fontSize: 15,
   },
+
   clarification: {
     borderWidth: 1,
     borderRadius: 12,
     padding: 12,
   },
+
   clarificationText: {
     fontSize: 14,
   },
+
   primaryButton: {
     minHeight: 46,
     borderRadius: 12,
@@ -597,32 +691,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 18,
   },
+
   primaryButtonText: {
-    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
   },
+
   conflictCard: {
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
     gap: 8,
   },
+
   conflictTitle: {
     fontSize: 17,
     fontWeight: "700",
   },
+
   conflictMessage: {
     fontSize: 14,
   },
+
   alternatives: {
     gap: 8,
     marginTop: 8,
   },
+
   alternativesTitle: {
     fontSize: 15,
     fontWeight: "700",
   },
+
   alternativeButton: {
     minHeight: 44,
     borderWidth: 1,
@@ -630,36 +730,44 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 14,
   },
+
   alternativeText: {
     fontSize: 14,
     fontWeight: "600",
   },
+
   proposalCard: {
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
     gap: 8,
   },
+
   proposalTitle: {
     fontSize: 16,
     fontWeight: "700",
   },
+
   availableText: {
     fontSize: 14,
     fontWeight: "600",
   },
+
   eventTitle: {
     fontSize: 18,
     fontWeight: "700",
   },
+
   eventDetail: {
     fontSize: 14,
   },
+
   actions: {
     flexDirection: "row",
     gap: 10,
     marginTop: 8,
   },
+
   secondaryButton: {
     minHeight: 46,
     borderWidth: 1,
@@ -667,13 +775,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 18,
+    flex: 1,
   },
+
   secondaryText: {
     fontSize: 15,
     fontWeight: "600",
   },
-  success: {
-    fontSize: 14,
-    fontWeight: "600",
+
+  successCard: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    gap: 4,
+  },
+
+  successTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  successText: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

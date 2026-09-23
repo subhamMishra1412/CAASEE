@@ -37,6 +37,7 @@ export default function RootLayout() {
             tabBarIcon: ({ color }) => <TabIcon icon="⌂" color={color} />,
           }}
         />
+
         <Tabs.Screen
           name="calendar"
           options={{
@@ -45,6 +46,7 @@ export default function RootLayout() {
             tabBarIcon: ({ color }) => <TabIcon icon="📅" color={color} />,
           }}
         />
+
         <Tabs.Screen
           name="tasks"
           options={{
@@ -53,7 +55,27 @@ export default function RootLayout() {
             tabBarIcon: ({ color }) => <TabIcon icon="✓" color={color} />,
           }}
         />
-        <Tabs.Screen name="profile" options={{ href: null }} />
+
+        <Tabs.Screen
+          name="profile"
+          options={{
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
+          name="assistant"
+          options={{
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
+          name="schedule"
+          options={{
+            href: null,
+          }}
+        />
       </Tabs>
     </SafeAreaView>
   );
@@ -61,7 +83,13 @@ export default function RootLayout() {
 
 function TabIcon({ icon, color }: { icon: string; color: ColorValue }) {
   return (
-    <Text style={{ fontSize: 18, color, opacity: color === "#000" ? 1 : 0.5 }}>
+    <Text
+      style={{
+        fontSize: 18,
+        color,
+        opacity: color === "#000" ? 1 : 0.5,
+      }}
+    >
       {icon}
     </Text>
   );
