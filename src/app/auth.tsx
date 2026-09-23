@@ -30,172 +30,245 @@ export default function AuthScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const isRegister = mode === "register";
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
     setError("");
+    setMessage("");
+    setPassword("");
+    setConfirmPassword("");
   }
 
   async function handleSubmit() {
-    if (loading) {
-      return;
-    }
-
     setError("");
+    setMessage("");
     setLoading(true);
 
-    const result = isRegister
-      ? await registerUser({
+    try {
+      if (mode === "register") {
+        const result = await registerUser({
           fullName,
           email,
           password,
           confirmPassword,
-        })
-      : await loginUser({
-          email,
-          password,
         });
 
-    setLoading(false);
+        if (!result.success) {
+          /*
+           * Registration may succeed but require email confirmation.
+           * That message is intentionally shown here rather than
+           * navigating into the authenticated app.
+           */
+          if (result.message?.startsWith("Account created.")) {
+            setMessage(result.message);
+            setMode("login");
+            setPassword("");
+            setConfirmPassword("");
+            return;
+          }
 
-    if (!result.success) {
-      setError(result.message ?? "Something went wrong.");
-      return;
+          setError(result.message ?? "Unable to create your account.");
+          return;
+        }
+
+        router.replace("/");
+        return;
+      }
+
+      const result = await loginUser({
+        email,
+        password,
+      });
+
+      if (!result.success) {
+        setError(result.message ?? "Unable to sign in.");
+        return;
+      }
+
+      router.replace("/");
+    } finally {
+      setLoading(false);
     }
-
-    router.replace("/(tabs)");
   }
+
+  const isRegister = mode === "register";
 
   return (
     <KeyboardAvoidingView
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.background,
-        },
-      ]}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        bounces={false}
       >
-        <View style={styles.content}>
-          <View style={styles.hero}>
-            <View style={styles.orb}>
-              <View style={styles.orbCore}>
-                <Text style={styles.orbSymbol}>✦</Text>
-              </View>
-            </View>
-
-            <Text
-              style={[
-                styles.brand,
-                {
-                  color: colors.text,
-                },
-              ]}
-            >
-              CAASee
-            </Text>
-
-            <Text
-              style={[
-                styles.title,
-                {
-                  color: colors.text,
-                },
-              ]}
-            >
-              {isRegister
-                ? "Let’s make your schedule feel lighter."
-                : "Good to see you again."}
-            </Text>
-
-            <Text
-              style={[
-                styles.subtitle,
-                {
-                  color: colors.textSecondary,
-                },
-              ]}
-            >
-              {isRegister
-                ? "I’ll help you plan your time and keep the things that matter organized."
-                : "Your schedule is waiting. Let’s get things organized."}
-            </Text>
-          </View>
-
+        <View style={styles.hero}>
           <View
             style={[
-              styles.card,
+              styles.orb,
               {
-                backgroundColor: colors.background,
-                borderColor: colors.border,
+                backgroundColor: colors.text,
               },
             ]}
           >
+            <Text style={styles.orbIcon}>✦</Text>
+          </View>
+
+          <Text
+            style={[
+              styles.brand,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
+            CAASEE
+          </Text>
+
+          <Text
+            style={[
+              styles.eyebrow,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
+            YOUR AI SCHEDULING ASSISTANT
+          </Text>
+
+          <Text
+            style={[
+              styles.title,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
+            {isRegister ? "Let's get you set up." : "Welcome back."}
+          </Text>
+
+          <Text
+            style={[
+              styles.subtitle,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
+            {isRegister
+              ? "Create your CAASee account and start planning your day."
+              : "Sign in to continue to your schedule."}
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          {isRegister ? (
+            <View style={styles.field}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Full name
+              </Text>
+
+              <TextInput
+                value={fullName}
+                onChangeText={setFullName}
+                placeholder="Your name"
+                placeholderTextColor={colors.textSecondary}
+                autoCapitalize="words"
+                style={[
+                  styles.input,
+                  {
+                    color: colors.text,
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                  },
+                ]}
+              />
+            </View>
+          ) : null}
+
+          <View style={styles.field}>
             <Text
               style={[
-                styles.cardTitle,
+                styles.label,
                 {
                   color: colors.text,
                 },
               ]}
             >
-              {isRegister ? "Create your account" : "Welcome back"}
+              Email
             </Text>
 
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="you@example.com"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                },
+              ]}
+            />
+          </View>
+
+          <View style={styles.field}>
             <Text
               style={[
-                styles.cardSubtitle,
+                styles.label,
                 {
-                  color: colors.textSecondary,
+                  color: colors.text,
                 },
               ]}
             >
-              {isRegister
-                ? "Let’s get you set up."
-                : "Enter your details to continue."}
+              Password
             </Text>
 
-            {isRegister && (
-              <View style={styles.field}>
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      color: colors.text,
-                    },
-                  ]}
-                >
-                  Your name
-                </Text>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="At least 8 characters"
+              placeholderTextColor={colors.textSecondary}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete={isRegister ? "new-password" : "password"}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                },
+              ]}
+            />
+          </View>
 
-                <TextInput
-                  value={fullName}
-                  onChangeText={setFullName}
-                  placeholder="What should I call you?"
-                  placeholderTextColor={colors.textSecondary}
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.text,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  returnKeyType="next"
-                />
-              </View>
-            )}
-
+          {isRegister ? (
             <View style={styles.field}>
               <Text
                 style={[
@@ -205,125 +278,102 @@ export default function AuthScreen() {
                   },
                 ]}
               >
-                Email
+                Confirm password
               </Text>
 
               <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="you@example.com"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Enter your password again"
                 placeholderTextColor={colors.textSecondary}
-                style={[
-                  styles.input,
-                  {
-                    color: colors.text,
-                    borderColor: colors.border,
-                  },
-                ]}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                returnKeyType="next"
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: colors.text,
-                  },
-                ]}
-              >
-                Password
-              </Text>
-
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder={
-                  isRegister ? "At least 8 characters" : "Enter your password"
-                }
-                placeholderTextColor={colors.textSecondary}
-                style={[
-                  styles.input,
-                  {
-                    color: colors.text,
-                    borderColor: colors.border,
-                  },
-                ]}
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
-                autoComplete={isRegister ? "new-password" : "current-password"}
-                returnKeyType={isRegister ? "next" : "done"}
+                autoComplete="new-password"
+                style={[
+                  styles.input,
+                  {
+                    color: colors.text,
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                  },
+                ]}
               />
             </View>
+          ) : null}
 
-            {isRegister && (
-              <View style={styles.field}>
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      color: colors.text,
-                    },
-                  ]}
-                >
-                  Confirm password
-                </Text>
-
-                <TextInput
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Enter it again"
-                  placeholderTextColor={colors.textSecondary}
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.text,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="new-password"
-                  returnKeyType="done"
-                />
-              </View>
-            )}
-
-            {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
-
-            <Pressable
-              onPress={handleSubmit}
-              disabled={loading}
-              style={({ pressed }) => [
-                styles.button,
-                pressed && !loading && styles.buttonPressed,
-                loading && styles.buttonDisabled,
+          {error ? (
+            <View
+              style={[
+                styles.messageBox,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
               ]}
             >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <>
-                  <Text style={styles.buttonText}>
-                    {isRegister ? "Create my account" : "Sign me in"}
-                  </Text>
+              <Text
+                style={[
+                  styles.messageText,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
+                {error}
+              </Text>
+            </View>
+          ) : null}
 
-                  <Text style={styles.buttonArrow}>→</Text>
-                </>
-              )}
-            </Pressable>
-          </View>
+          {message ? (
+            <View
+              style={[
+                styles.messageBox,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.messageText,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
+                {message}
+              </Text>
+            </View>
+          ) : null}
+
+          <Pressable
+            onPress={handleSubmit}
+            disabled={loading}
+            style={[
+              styles.primaryButton,
+              {
+                backgroundColor: colors.text,
+                opacity: loading ? 0.6 : 1,
+              },
+            ]}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.background} />
+            ) : (
+              <Text
+                style={[
+                  styles.primaryButtonText,
+                  {
+                    color: colors.background,
+                  },
+                ]}
+              >
+                {isRegister ? "Create account" : "Sign in"}
+              </Text>
+            )}
+          </Pressable>
 
           <View style={styles.switchRow}>
             <Text
@@ -334,30 +384,38 @@ export default function AuthScreen() {
                 },
               ]}
             >
-              {isRegister ? "Already have an account?" : "New to CAASee?"}
+              {isRegister
+                ? "Already have an account?"
+                : "Don't have an account?"}
             </Text>
 
             <Pressable
               onPress={() => switchMode(isRegister ? "login" : "register")}
-              disabled={loading}
             >
-              <Text style={styles.switchLink}>
-                {isRegister ? "Sign in" : "Create an account"}
+              <Text
+                style={[
+                  styles.switchAction,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
+                {isRegister ? "Sign in" : "Create account"}
               </Text>
             </Pressable>
           </View>
-
-          <Text
-            style={[
-              styles.footer,
-              {
-                color: colors.textSecondary,
-              },
-            ]}
-          >
-            Your time. Your plans. One calmer place.
-          </Text>
         </View>
+
+        <Text
+          style={[
+            styles.footer,
+            {
+              color: colors.textSecondary,
+            },
+          ]}
+        >
+          Your account keeps your schedule private and synced.
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -370,186 +428,132 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 24,
-  },
-
-  content: {
-    width: "100%",
-    maxWidth: 520,
-    alignSelf: "center",
+    paddingHorizontal: 22,
+    paddingTop: 50,
+    paddingBottom: 40,
+    justifyContent: "center",
   },
 
   hero: {
     alignItems: "center",
-    marginBottom: 17,
+    marginBottom: 28,
   },
 
   orb: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#DBEAFE",
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 14,
   },
 
-  orbCore: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#2563EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  orbSymbol: {
+  orbIcon: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 25,
   },
 
   brand: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: "800",
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    marginBottom: 5,
+    letterSpacing: 2.2,
+  },
+
+  eyebrow: {
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.4,
+    marginTop: 5,
   },
 
   title: {
-    fontSize: 22,
-    lineHeight: 27,
-    fontWeight: "800",
+    fontSize: 30,
+    fontWeight: "700",
+    letterSpacing: -0.8,
     textAlign: "center",
-    letterSpacing: -0.3,
-    marginBottom: 5,
+    marginTop: 24,
   },
 
   subtitle: {
-    maxWidth: 370,
-    fontSize: 12.5,
-    lineHeight: 17,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: "center",
+    maxWidth: 340,
+    marginTop: 7,
   },
 
   card: {
+    borderRadius: 22,
     borderWidth: 1,
-    borderRadius: 20,
-    padding: 16,
-    shadowColor: "#1D4ED8",
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    elevation: 2,
-  },
-
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    marginBottom: 3,
-  },
-
-  cardSubtitle: {
-    fontSize: 12,
-    lineHeight: 17,
-    marginBottom: 13,
+    padding: 18,
   },
 
   field: {
-    marginBottom: 10,
+    marginBottom: 16,
   },
 
   label: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
-    marginBottom: 5,
+    marginBottom: 7,
   },
 
   input: {
-    minHeight: 46,
+    minHeight: 50,
     borderWidth: 1,
-    borderRadius: 13,
-    paddingHorizontal: 13,
+    borderRadius: 12,
+    paddingHorizontal: 14,
     fontSize: 14,
   },
 
-  errorBox: {
-    backgroundColor: "#FEF2F2",
+  messageBox: {
     borderWidth: 1,
-    borderColor: "#FECACA",
-    borderRadius: 11,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
-    marginBottom: 10,
+    borderRadius: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+    marginBottom: 14,
   },
 
-  errorText: {
-    color: "#B91C1C",
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "600",
+  messageText: {
+    fontSize: 13,
+    lineHeight: 19,
   },
 
-  button: {
-    minHeight: 48,
+  primaryButton: {
+    minHeight: 50,
     borderRadius: 13,
-    backgroundColor: "#2563EB",
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
     marginTop: 2,
   },
 
-  buttonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.99 }],
-  },
-
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-
-  buttonText: {
-    color: "#FFFFFF",
+  primaryButtonText: {
     fontSize: 14,
     fontWeight: "800",
-  },
-
-  buttonArrow: {
-    color: "#FFFFFF",
-    fontSize: 19,
   },
 
   switchRow: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
     flexWrap: "wrap",
+    marginTop: 18,
     gap: 5,
-    marginTop: 14,
   },
 
   switchText: {
-    fontSize: 12,
+    fontSize: 13,
   },
 
-  switchLink: {
-    color: "#2563EB",
-    fontSize: 12,
+  switchAction: {
+    fontSize: 13,
     fontWeight: "800",
   },
 
   footer: {
     textAlign: "center",
-    fontSize: 10,
-    marginTop: 12,
-    opacity: 0.7,
+    fontSize: 11,
+    lineHeight: 17,
+    marginTop: 20,
   },
 });

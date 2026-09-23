@@ -1,34 +1,29 @@
+import { AuthRequired } from "@/components/AuthRequired";
 import EventComposer from "@/components/EventComposer";
 import { Colors } from "@/constants/theme";
 import {
   rescheduleCalendarEvent,
   scheduleCalendarEvent,
-  useCalendarEvents,
 } from "@/domain/calendar/calendarStore";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Stack } from "expo-router";
 import { useEffect, useRef } from "react";
-import {
-  Animated,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
-} from "react-native";
+import { Animated, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function ScheduleScreen() {
+  return (
+    <AuthRequired
+      title="Your schedule is private"
+      description="Sign in or create an account to schedule events."
+    >
+      <ScheduleContent />
+    </AuthRequired>
+  );
+}
+
+function ScheduleContent() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
-
-  /*
-   * Initialize the authenticated user's persistent calendar.
-   *
-   * The calendar store:
-   * - loads events from Supabase
-   * - clears events when the user signs out
-   * - reloads events when the authenticated user changes
-   */
-  const calendarEvents = useCalendarEvents();
 
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
@@ -62,14 +57,6 @@ export default function ScheduleScreen() {
     inputRange: [0, 1],
     outputRange: [0.12, 0.24],
   });
-
-  /*
-   * Wait until the calendar store has initialized.
-   *
-   * We use the event array itself here only to ensure the hook
-   * remains active. The store handles loading internally.
-   */
-  void calendarEvents;
 
   return (
     <>

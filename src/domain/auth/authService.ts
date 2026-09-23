@@ -1,9 +1,6 @@
 import { supabase } from "@/lib/supabase";
+import { getDeviceTimezone } from "./timezone";
 import type { RegisterInput, RegisterResult } from "./types";
-
-function getDefaultTimezone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-}
 
 export async function registerUser(
   input: RegisterInput,
@@ -49,6 +46,12 @@ export async function registerUser(
   const { data, error } = await supabase.auth.signUp({
     email,
     password: input.password,
+    options: {
+      data: {
+        full_name: fullName,
+        timezone: getDeviceTimezone(),
+      },
+    },
   });
 
   if (error) {
@@ -65,16 +68,15 @@ export async function registerUser(
     };
   }
 
-  const { error: profileError } = await supabase.from("profiles").insert({
-    id: data.user.id,
-    full_name: fullName,
-    timezone: getDefaultTimezone(),
-  });
-
-  if (profileError) {
+  /*
+   * If Supabase email confirmation is enabled,
+   * the account exists but there is no session yet.
+   */
+  if (!data.session) {
     return {
       success: false,
-      message: "Account created, but your profile could not be created.",
+      message:
+        "Account created. Please check your email to confirm your account, then sign in.",
     };
   }
 
@@ -114,6 +116,21 @@ export async function loginUser(input: {
     email,
     password: input.password,
   });
+
+  if (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+
+  return {
+    success: true,
+  };
+}
+
+export async function signOutUser(): Promise<RegisterResult> {
+  const { error } = await supabase.auth.signOut();
 
   if (error) {
     return {

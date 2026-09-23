@@ -1,6 +1,4 @@
-import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-
+import { AuthRequired } from "@/components/AuthRequired";
 import { CalendarGrid } from "@/components/CalendarGrid";
 import { Colors } from "@/constants/theme";
 import {
@@ -11,8 +9,21 @@ import {
   formatEventTime,
   getEventCalendarDate,
 } from "@/domain/calendar/dateUtils";
+import { useMemo, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function CalendarScreen() {
+  return (
+    <AuthRequired
+      title="Your calendar is private"
+      description="Sign in or create an account to access your personal calendar."
+    >
+      <CalendarContent />
+    </AuthRequired>
+  );
+}
+
+function CalendarContent() {
   const colors = Colors.light;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
