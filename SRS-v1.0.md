@@ -304,16 +304,16 @@ replace the CAASee domain model.
 
 # 5.1 User and Account Requirements
 
-### FR-001 — User Registration
+### FR-001 — User Registration🔵✓
 
 The system SHALL allow a user to create a CAASee account.
 
-### FR-002 — Authentication
+### FR-002 — Authentication🔵✓
 
 The system SHALL authenticate users before allowing access to private
 calendar data.
 
-### FR-003 — User Isolation
+### FR-003 — User Isolation🔵✓
 
 The system SHALL prevent one user from accessing another user's
 calendar data.

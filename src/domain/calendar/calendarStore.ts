@@ -1,22 +1,172 @@
-import { mockEvents } from "@/data/mockData";
 import { getEventCalendarDate } from "@/domain/calendar/dateUtils";
 import { checkAvailability } from "@/domain/calendar/scheduling/checkAvailability";
 import type {
   CalendarDaySummary,
   CalendarEvent,
 } from "@/domain/calendar/types";
+import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
-let calendarEvents: CalendarEvent[] = [...mockEvents];
+let calendarEvents: CalendarEvent[] = [];
+let currentUserId: string | null = null;
+let loading = false;
+
 const listeners = new Set<() => void>();
 
 function notifyListeners(): void {
   listeners.forEach((listener) => listener());
 }
 
+function mapDatabaseEvent(row: {
+  id: string;
+  title: string;
+  start_at: string;
+  end_at: string;
+  timezone: string;
+  description: string | null;
+  location: string | null;
+  source: "manual" | "ai";
+}): CalendarEvent {
+  return {
+    id: row.id,
+    title: row.title,
+    startAt: row.start_at,
+    endAt: row.end_at,
+    timezone: row.timezone,
+    description: row.description ?? undefined,
+    location: row.location ?? undefined,
+    source: row.source,
+  };
+}
+
+async function getAuthenticatedUserId(): Promise<string | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return user?.id ?? null;
+}
+
+export async function loadCalendarEvents(): Promise<void> {
+  if (loading) {
+    return;
+  }
+
+  loading = true;
+
+  try {
+    const userId = await getAuthenticatedUserId();
+
+    /*
+     * No authenticated user means there is no private calendar
+     * that should be loaded into client state.
+     */
+    if (!userId) {
+      currentUserId = null;
+      calendarEvents = [];
+      notifyListeners();
+      return;
+    }
+
+    /*
+     * If the authenticated user changed, discard the previous
+     * user's in-memory calendar immediately.
+     */
+    if (currentUserId !== userId) {
+      currentUserId = userId;
+      calendarEvents = [];
+      notifyListeners();
+    }
+
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .select("id,title,start_at,end_at,timezone,description,location,source")
+      .eq("user_id", userId)
+      .order("start_at", { ascending: true });
+
+    if (error) {
+      console.error("Failed to load calendar events:", error);
+      return;
+    }
+
+    calendarEvents = (data ?? []).map(mapDatabaseEvent);
+    notifyListeners();
+  } finally {
+    loading = false;
+  }
+}
+
 export function getCalendarEvents(): CalendarEvent[] {
   return calendarEvents;
 }
+
+export function subscribeCalendarEvents(listener: () => void): () => void {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function useCalendarEvents(): CalendarEvent[] {
+  const [events, setEvents] = useState<CalendarEvent[]>(calendarEvents);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const refresh = async () => {
+      await loadCalendarEvents();
+
+      if (mounted) {
+        setEvents([...calendarEvents]);
+      }
+    };
+
+    refresh();
+
+    const unsubscribe = subscribeCalendarEvents(() => {
+      if (!mounted) {
+        return;
+      }
+
+      setEvents([...calendarEvents]);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) {
+        return;
+      }
+
+      if (!session?.user) {
+        currentUserId = null;
+        calendarEvents = [];
+        notifyListeners();
+        return;
+      }
+
+      await loadCalendarEvents();
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  return events;
+}
+
+export type CalendarScheduleResult =
+  | {
+      scheduled: true;
+    }
+  | {
+      scheduled: false;
+      conflict: CalendarEvent;
+    };
 
 export function addCalendarEvent(event: CalendarEvent): void {
   const alreadyExists = calendarEvents.some(
@@ -30,15 +180,6 @@ export function addCalendarEvent(event: CalendarEvent): void {
   calendarEvents = [...calendarEvents, event];
   notifyListeners();
 }
-
-export type CalendarScheduleResult =
-  | {
-      scheduled: true;
-    }
-  | {
-      scheduled: false;
-      conflict: CalendarEvent;
-    };
 
 export function scheduleCalendarEvent(
   event: CalendarEvent,
@@ -65,18 +206,50 @@ export function scheduleCalendarEvent(
     };
   }
 
-  addCalendarEvent(event);
-
-  const wasAdded = getCalendarEvents().some(
-    (existingEvent) => existingEvent.id === event.id,
-  );
-
-  if (!wasAdded) {
+  /*
+   * Do not allow a calendar mutation without an authenticated user.
+   */
+  if (!currentUserId) {
     return {
       scheduled: false,
       conflict: event,
     };
   }
+
+  /*
+   * Persist the event using the authenticated user's ID.
+   *
+   * RLS independently verifies that user_id belongs to auth.uid().
+   */
+  void supabase
+    .from("calendar_events")
+    .insert({
+      id: event.id,
+      user_id: currentUserId,
+      title: event.title,
+      start_at: event.startAt,
+      end_at: event.endAt,
+      timezone: event.timezone,
+      description: event.description ?? null,
+      location: event.location ?? null,
+      source: event.source,
+    })
+    .then(({ error }) => {
+      if (error) {
+        console.error("Failed to save calendar event:", error);
+
+        /*
+         * Roll back the optimistic local event if persistence failed.
+         */
+        calendarEvents = calendarEvents.filter(
+          (existingEvent) => existingEvent.id !== event.id,
+        );
+
+        notifyListeners();
+      }
+    });
+
+  addCalendarEvent(event);
 
   return {
     scheduled: true,
@@ -97,12 +270,6 @@ export function rescheduleCalendarEvent(
   existingEventId: string,
   proposedEvent: CalendarEvent,
 ): CalendarRescheduleResult {
-  /*
-   * Re-read the calendar at execution time.
-   *
-   * The proposal may have been created several seconds earlier,
-   * so availability must never rely only on the earlier UI check.
-   */
   const currentEvents = getCalendarEvents();
 
   const existingEvent = currentEvents.find(
@@ -116,6 +283,13 @@ export function rescheduleCalendarEvent(
     };
   }
 
+  if (!currentUserId) {
+    return {
+      rescheduled: false,
+      conflict: existingEvent,
+    };
+  }
+
   /*
    * The event being rescheduled must not conflict with itself.
    */
@@ -123,9 +297,6 @@ export function rescheduleCalendarEvent(
     (event) => event.id !== existingEventId,
   );
 
-  /*
-   * Final execution-time validation.
-   */
   const availability = checkAvailability(proposedEvent, otherEvents);
 
   if (!availability.available) {
@@ -135,10 +306,6 @@ export function rescheduleCalendarEvent(
     };
   }
 
-  /*
-   * Preserve the existing event's identity and metadata.
-   * Only the scheduled time changes.
-   */
   const updatedEvent: CalendarEvent = {
     ...existingEvent,
     startAt: proposedEvent.startAt,
@@ -146,55 +313,43 @@ export function rescheduleCalendarEvent(
   };
 
   /*
-   * Replace the existing event instead of creating a new one.
+   * Update the database using both the event ID and current user ID.
+   *
+   * RLS provides the actual security boundary.
    */
+  void supabase
+    .from("calendar_events")
+    .update({
+      start_at: updatedEvent.startAt,
+      end_at: updatedEvent.endAt,
+    })
+    .eq("id", existingEventId)
+    .eq("user_id", currentUserId)
+    .then(({ error }) => {
+      if (error) {
+        console.error("Failed to reschedule calendar event:", error);
+
+        /*
+         * Roll back the optimistic update.
+         */
+        calendarEvents = calendarEvents.map((event) =>
+          event.id === existingEventId ? existingEvent : event,
+        );
+
+        notifyListeners();
+      }
+    });
+
   calendarEvents = currentEvents.map((event) =>
     event.id === existingEventId ? updatedEvent : event,
   );
 
   notifyListeners();
 
-  /*
-   * Verify that the replacement actually exists in calendar state.
-   */
-  const wasRescheduled = getCalendarEvents().some(
-    (event) =>
-      event.id === existingEventId &&
-      event.startAt === updatedEvent.startAt &&
-      event.endAt === updatedEvent.endAt,
-  );
-
-  if (!wasRescheduled) {
-    return {
-      rescheduled: false,
-      conflict: existingEvent,
-    };
-  }
-
   return {
     rescheduled: true,
     event: updatedEvent,
   };
-}
-
-export function subscribeCalendarEvents(listener: () => void): () => void {
-  listeners.add(listener);
-
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-export function useCalendarEvents(): CalendarEvent[] {
-  const [events, setEvents] = useState<CalendarEvent[]>(calendarEvents);
-
-  useEffect(() => {
-    return subscribeCalendarEvents(() => {
-      setEvents([...calendarEvents]);
-    });
-  }, []);
-
-  return events;
 }
 
 export function getCalendarDaySummaries(
@@ -204,6 +359,7 @@ export function getCalendarDaySummaries(
 
   events.forEach((event) => {
     const date = getEventCalendarDate(event);
+
     counts.set(date, (counts.get(date) ?? 0) + 1);
   });
 
