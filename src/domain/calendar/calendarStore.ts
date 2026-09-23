@@ -1,4 +1,5 @@
 import { mockEvents } from "@/data/mockData";
+import { getEventCalendarDate } from "@/domain/calendar/dateUtils";
 import { checkAvailability } from "@/domain/calendar/scheduling/checkAvailability";
 import type {
   CalendarDaySummary,
@@ -202,7 +203,7 @@ export function getCalendarDaySummaries(
   const counts = new Map<string, number>();
 
   events.forEach((event) => {
-    const date = event.startAt.slice(0, 10);
+    const date = getEventCalendarDate(event);
     counts.set(date, (counts.get(date) ?? 0) + 1);
   });
 
