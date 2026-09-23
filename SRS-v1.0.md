@@ -318,7 +318,7 @@ calendar data.
 The system SHALL prevent one user from accessing another user's
 calendar data.
 
-### FR-004 — User Time Zone
+### FR-004 — User Time Zone🔵✓
 
 The system SHALL store the user's configured time zone.
 
