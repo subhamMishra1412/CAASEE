@@ -94,3 +94,9 @@ function TabIcon({ icon, color }: { icon: string; color: ColorValue }) {
     </Text>
   );
 }
+<Tabs.Screen
+  name="register"
+  options={{
+    href: null,
+  }}
+/>;

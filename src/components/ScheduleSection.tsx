@@ -38,7 +38,6 @@ export function ScheduleSection({
 
   return (
     <View style={styles.container}>
-      {" "}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>
           Today's Schedule{" "}
