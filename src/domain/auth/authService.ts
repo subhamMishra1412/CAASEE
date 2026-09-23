@@ -82,3 +82,47 @@ export async function registerUser(
     success: true,
   };
 }
+
+export async function loginUser(input: {
+  email: string;
+  password: string;
+}): Promise<RegisterResult> {
+  const email = input.email.trim().toLowerCase();
+
+  if (!email) {
+    return {
+      success: false,
+      message: "Please enter your email.",
+    };
+  }
+
+  if (!email.includes("@")) {
+    return {
+      success: false,
+      message: "Please enter a valid email address.",
+    };
+  }
+
+  if (!input.password) {
+    return {
+      success: false,
+      message: "Please enter your password.",
+    };
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password: input.password,
+  });
+
+  if (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+
+  return {
+    success: true,
+  };
+}

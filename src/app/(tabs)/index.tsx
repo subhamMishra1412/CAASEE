@@ -1,6 +1,7 @@
 import { AIOrb } from "@/components/AIOrb";
 import { ScheduleSection } from "@/components/ScheduleSection";
 import { Colors } from "@/constants/theme";
+import { useAuthSession } from "@/domain/auth/useAuthSession";
 import { useCalendarEvents } from "@/domain/calendar/calendarStore";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
@@ -19,6 +20,9 @@ export default function HomeScreen() {
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const events = useCalendarEvents();
+  const { session } = useAuthSession();
+
+  const privateEvents = session ? events : [];
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -31,23 +35,46 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+        },
+      ]}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
       <View style={styles.header}>
         <View>
-          <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+          <Text
+            style={[
+              styles.greeting,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
             {getGreeting()}
           </Text>
 
-          <Text style={[styles.name, { color: colors.text }]}>Subham</Text>
+          <Text
+            style={[
+              styles.name,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
+            Subham
+          </Text>
         </View>
 
         <TouchableOpacity
           style={[
             styles.settingsButton,
-            { backgroundColor: colors.cardBackground },
+            {
+              backgroundColor: colors.cardBackground,
+            },
           ]}
           onPress={() => router.push("/profile")}
         >
@@ -56,9 +83,25 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.brandingContainer}>
-        <Text style={[styles.branding, { color: colors.text }]}>CAASEE</Text>
+        <Text
+          style={[
+            styles.branding,
+            {
+              color: colors.text,
+            },
+          ]}
+        >
+          CAASEE
+        </Text>
 
-        <Text style={[styles.brandingSubtext, { color: colors.textSecondary }]}>
+        <Text
+          style={[
+            styles.brandingSubtext,
+            {
+              color: colors.textSecondary,
+            },
+          ]}
+        >
           Intelligent scheduling assistant
         </Text>
       </View>
@@ -86,94 +129,233 @@ export default function HomeScreen() {
         <View
           style={[
             styles.textScheduleIcon,
-            { backgroundColor: colors.background },
+            {
+              backgroundColor: colors.background,
+            },
           ]}
         >
-          <Text style={[styles.textScheduleIconText, { color: colors.text }]}>
+          <Text
+            style={[
+              styles.textScheduleIconText,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
             ✎
           </Text>
         </View>
 
         <View style={styles.textScheduleContent}>
-          <Text style={[styles.textScheduleTitle, { color: colors.text }]}>
+          <Text
+            style={[
+              styles.textScheduleTitle,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
             Schedule with text
           </Text>
 
           <Text
             style={[
               styles.textScheduleSubtitle,
-              { color: colors.textSecondary },
+              {
+                color: colors.textSecondary,
+              },
             ]}
           >
             Type a request and CAASEE will schedule it
           </Text>
         </View>
 
-        <Text style={[styles.arrow, { color: colors.textSecondary }]}>›</Text>
+        <Text
+          style={[
+            styles.arrow,
+            {
+              color: colors.textSecondary,
+            },
+          ]}
+        >
+          ›
+        </Text>
       </Pressable>
 
       {/* Quick stats */}
       <View
         style={[
           styles.statsContainer,
-          { backgroundColor: colors.cardBackground },
+          {
+            backgroundColor: colors.cardBackground,
+          },
         ]}
       >
         <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: colors.text }]}>
-            {events.length}
+          <Text
+            style={[
+              styles.statNumber,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
+            {privateEvents.length}
           </Text>
 
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+          <Text
+            style={[
+              styles.statLabel,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
             Events
           </Text>
         </View>
 
         <View
-          style={[styles.statDivider, { backgroundColor: colors.border }]}
+          style={[
+            styles.statDivider,
+            {
+              backgroundColor: colors.border,
+            },
+          ]}
         />
 
         <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: colors.text }]}>12</Text>
+          <Text
+            style={[
+              styles.statNumber,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
+            {session ? "12" : "—"}
+          </Text>
 
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+          <Text
+            style={[
+              styles.statLabel,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
             This week
           </Text>
         </View>
 
         <View
-          style={[styles.statDivider, { backgroundColor: colors.border }]}
+          style={[
+            styles.statDivider,
+            {
+              backgroundColor: colors.border,
+            },
+          ]}
         />
 
         <View style={styles.statBox}>
-          <Text style={[styles.statNumber, { color: colors.text }]}>2</Text>
+          <Text
+            style={[
+              styles.statNumber,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
+            {session ? "2" : "—"}
+          </Text>
 
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+          <Text
+            style={[
+              styles.statLabel,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
             Pending
           </Text>
         </View>
       </View>
 
-      <ScheduleSection
-        events={events}
-        colors={colors}
-        onViewAll={() => router.push("/calendar")}
-      />
+      {/* Private schedule */}
+      {session ? (
+        <ScheduleSection
+          events={privateEvents}
+          colors={colors}
+          onViewAll={() => router.push("/calendar")}
+        />
+      ) : (
+        <Pressable
+          onPress={() => router.push("/auth")}
+          style={[
+            styles.authCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.authCardTitle,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
+            Sign in to see your schedule
+          </Text>
+
+          <Text
+            style={[
+              styles.authCardText,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
+            Create an account or sign in to access your private calendar.
+          </Text>
+
+          <Text style={styles.authCardLink}>Sign in or create account →</Text>
+        </Pressable>
+      )}
 
       <View
         style={[
           styles.insightCard,
-          { backgroundColor: colors.insightBackground },
+          {
+            backgroundColor: colors.insightBackground,
+          },
         ]}
       >
         <Text style={styles.insightIcon}>💡</Text>
 
         <View style={styles.insightContent}>
-          <Text style={[styles.insightTitle, { color: colors.text }]}>
+          <Text
+            style={[
+              styles.insightTitle,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
             Smart suggestion
           </Text>
 
-          <Text style={[styles.insightText, { color: colors.textSecondary }]}>
+          <Text
+            style={[
+              styles.insightText,
+              {
+                color: colors.textSecondary,
+              },
+            ]}
+          >
             Block 4-5 PM for focused work based on your patterns
           </Text>
         </View>
@@ -317,6 +499,31 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 30,
+  },
+
+  authCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 20,
+  },
+
+  authCardTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  authCardText: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 5,
+  },
+
+  authCardLink: {
+    color: "#2563EB",
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 12,
   },
 
   insightCard: {

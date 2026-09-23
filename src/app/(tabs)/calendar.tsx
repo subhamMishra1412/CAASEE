@@ -16,7 +16,7 @@ export default function CalendarScreen() {
   const colors = Colors.light;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [month, setMonth] = useState(new Date());
+  const [month] = useState(new Date());
 
   const calendarEvents = useCalendarEvents();
 
@@ -56,7 +56,7 @@ export default function CalendarScreen() {
         </Text>
 
         {selectedEvents.length === 0 ? (
-          <Text style={[styles.emptyText, { color: colors.mutedText }]}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             No events for this day.
           </Text>
         ) : (
@@ -66,7 +66,7 @@ export default function CalendarScreen() {
               style={[
                 styles.eventCard,
                 {
-                  backgroundColor: colors.card,
+                  backgroundColor: colors.cardBackground,
                   borderColor: colors.border,
                 },
               ]}
@@ -75,19 +75,23 @@ export default function CalendarScreen() {
                 {event.title}
               </Text>
 
-              <Text style={[styles.eventTime, { color: colors.mutedText }]}>
+              <Text style={[styles.eventTime, { color: colors.textSecondary }]}>
                 {formatEventTime(event.startAt, event.timezone)} –{" "}
                 {formatEventTime(event.endAt, event.timezone)}
               </Text>
 
               {event.location ? (
-                <Text style={[styles.eventDetail, { color: colors.mutedText }]}>
+                <Text
+                  style={[styles.eventDetail, { color: colors.textSecondary }]}
+                >
                   {event.location}
                 </Text>
               ) : null}
 
               {event.description ? (
-                <Text style={[styles.eventDetail, { color: colors.mutedText }]}>
+                <Text
+                  style={[styles.eventDetail, { color: colors.textSecondary }]}
+                >
                   {event.description}
                 </Text>
               ) : null}
@@ -104,33 +108,41 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 24,
   },
+
   title: {
     fontSize: 28,
     fontWeight: "700",
   },
+
   eventsSection: {
     gap: 12,
   },
+
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
   },
+
   emptyText: {
     fontSize: 14,
   },
+
   eventCard: {
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
     gap: 6,
   },
+
   eventTitle: {
     fontSize: 16,
     fontWeight: "700",
   },
+
   eventTime: {
     fontSize: 14,
   },
+
   eventDetail: {
     fontSize: 13,
   },

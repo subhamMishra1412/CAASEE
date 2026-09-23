@@ -1,8 +1,8 @@
 import EventComposer from "@/components/EventComposer";
 import { Colors } from "@/constants/theme";
 import {
-    rescheduleCalendarEvent,
-    scheduleCalendarEvent,
+  rescheduleCalendarEvent,
+  scheduleCalendarEvent,
 } from "@/domain/calendar/calendarStore";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Stack } from "expo-router";
@@ -11,7 +11,7 @@ import { Animated, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function ScheduleScreen() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
@@ -65,7 +65,6 @@ export default function ScheduleScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* AI Presence */}
         <View style={styles.aiHeader}>
           <View style={styles.orbWrapper}>
             <Animated.View
@@ -99,7 +98,6 @@ export default function ScheduleScreen() {
           </Text>
         </View>
 
-        {/* Main heading */}
         <View style={styles.intro}>
           <Text style={[styles.title, { color: colors.text }]}>
             Let&apos;s plan it.
@@ -110,7 +108,6 @@ export default function ScheduleScreen() {
           </Text>
         </View>
 
-        {/* Scheduling workspace */}
         <View
           style={[
             styles.composerCard,
@@ -146,7 +143,6 @@ export default function ScheduleScreen() {
           />
         </View>
 
-        {/* Example */}
         <View style={styles.exampleContainer}>
           <Text style={[styles.exampleLabel, { color: colors.textSecondary }]}>
             TRY SAYING
@@ -167,8 +163,6 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 50,
   },
-
-  /* AI header */
 
   aiHeader: {
     alignItems: "center",
@@ -225,8 +219,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  /* Introduction */
-
   intro: {
     alignItems: "center",
     marginBottom: 22,
@@ -245,8 +237,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 6,
   },
-
-  /* Composer */
 
   composerCard: {
     borderRadius: 24,
@@ -279,8 +269,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
-
-  /* Example */
 
   exampleContainer: {
     marginTop: 20,

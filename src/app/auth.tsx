@@ -4,15 +4,15 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 type AuthMode = "register" | "login";
@@ -20,7 +20,7 @@ type AuthMode = "register" | "login";
 export default function AuthScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "light"];
+  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const [mode, setMode] = useState<AuthMode>("register");
 
@@ -86,7 +86,6 @@ export default function AuthScreen() {
         bounces={false}
       >
         <View style={styles.content}>
-          {/* AI INTRO */}
           <View style={styles.hero}>
             <View style={styles.orb}>
               <View style={styles.orbCore}>
@@ -132,7 +131,6 @@ export default function AuthScreen() {
             </Text>
           </View>
 
-          {/* FORM */}
           <View
             style={[
               styles.card,
@@ -327,7 +325,6 @@ export default function AuthScreen() {
             </Pressable>
           </View>
 
-          {/* SWITCH */}
           <View style={styles.switchRow}>
             <Text
               style={[
